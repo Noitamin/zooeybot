@@ -1,10 +1,12 @@
 import discord
 from discord.ext import commands
+import re
 
-TOKEN = 'MzYyODc4NzMyMjc0MzY4NTIy.DK9vWg.Mi5Sw_roiyTxE1gJHq33nJcQX0o'
+TOKEN = 'Paste your own token here'
+
 
 description = '''Zooey bot for discord shenanigans'''
-bot = commands.Bot(command_prefix='!', description=description)
+bot = commands.Bot(command_prefix='&', description=description)
 
 @bot.event
 async def on_ready():
@@ -19,7 +21,7 @@ async def hello():
     """Says world"""
     await bot.say("world")
 
-@bot.command()
+
 async def conjunction():
     """Secret to winning MVP races"""
     await bot.say("Enjoy your mvp!")
@@ -28,5 +30,22 @@ async def conjunction():
 async def add(left : int, right : int):
     """Adds two numbers together."""
     await bot.say(left + right)
+
+@bot.command()
+async def saber():
+    """rekt."""
+    await bot.say("git rekt")
+
+@bot.command()
+async def big(message):
+    """Hugify a given emoji"""
+    pattern = re.compile("\<\:.+\:\d+\>")
+    if (pattern.match(message)):
+        emoji_id = re.sub(r'\<\:\D+|\>', '', message)
+        new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
+        await bot.say(new_message)
+    else:
+        await bot.say("That's not a custom emoji. Try again")
+        
 
 bot.run(TOKEN)
