@@ -1,9 +1,7 @@
 import discord
 from discord.ext import commands
 import re
-
-TOKEN = 'Paste your own token here'
-
+from secrets import TOKEN
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
