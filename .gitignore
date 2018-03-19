@@ -1,6 +1,6 @@
 # ignore secrets
-
+secrets.py
 # ignoring the pycache
 __pycache__
 # ignore self
-
+.gitignore
