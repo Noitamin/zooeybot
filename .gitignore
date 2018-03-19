@@ -1,0 +1,6 @@
+# ignore secrets
+
+# ignoring the pycache
+__pycache__
+# ignore self
+

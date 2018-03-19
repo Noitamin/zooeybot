@@ -1,9 +1,7 @@
 import discord
 from discord.ext import commands
 import re
-
-TOKEN = 'NDI1MzgzNDkzMjc5Njc4NDcy.DZGtyw.xG9Rx3PsL3SMia5LuFzpxIlKn9c'
-
+from secrets import TOKEN
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
@@ -47,5 +45,8 @@ async def big(message):
     else:
         await bot.say("That's not a custom emoji. Try again")
         
+@bot.command()
+async def goat():
+    await bot.say("https://cdn.modernfarmer.com/wp-content/uploads/2013/09/saanen.jpg")
 
 bot.run(TOKEN)
