@@ -47,5 +47,8 @@ async def big(message):
     else:
         await bot.say("That's not a custom emoji. Try again")
         
+@bot.command()
+async def goat():
+    await bot.say("https://cdn.modernfarmer.com/wp-content/uploads/2013/09/saanen.jpg")
 
 bot.run(TOKEN)
