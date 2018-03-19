@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import re
 
-TOKEN = 'Paste your own token here'
+TOKEN = 'NDI1MzgzNDkzMjc5Njc4NDcy.DZGtyw.xG9Rx3PsL3SMia5LuFzpxIlKn9c'
 
 
 description = '''Zooey bot for discord shenanigans'''
