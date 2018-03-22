@@ -34,14 +34,17 @@ async def saber():
     """rekt."""
     await bot.say("git rekt")
 
-@bot.command()
-async def big(message):
+@bot.command(pass_context=True)
+async def big(ctx, message):
     """Hugify a given emoji"""
     pattern = re.compile("\<\:.+\:\d+\>")
+    channel = ctx.message.channel
     if (pattern.match(message)):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
         new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
-        await bot.say(new_message)
+        e = discord.Embed()
+        e.set_image(url=new_message)
+        await bot.send_message(channel, embed=e)
     else:
         await bot.say("That's not a custom emoji. Try again")
         
