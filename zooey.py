@@ -37,11 +37,20 @@ async def saber():
 @bot.command(pass_context=True)
 async def big(ctx, message):
     """Hugify a given emoji"""
-    pattern = re.compile("\<\:.+\:\d+\>")
+    img_pattern = re.compile("\<\:.+\:\d+\>")
+    gif_pattern = re.compile("\<a\:.+\:\d+\>")
+    print(message)
     channel = ctx.message.channel
-    if (pattern.match(message)):
+    if (img_pattern.match(message)):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
         new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
+        e = discord.Embed()
+        e.set_image(url=new_message)
+        await bot.send_message(channel, embed=e)
+    elif (gif_pattern.match(message)):
+        emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
+        new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif?v=1" 
+        print(new_message)
         e = discord.Embed()
         e.set_image(url=new_message)
         await bot.send_message(channel, embed=e)
