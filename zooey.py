@@ -39,24 +39,34 @@ async def big(ctx, message):
     """Hugify a given emoji"""
     img_pattern = re.compile("\<\:.+\:\d+\>")
     gif_pattern = re.compile("\<a\:.+\:\d+\>")
-    print(message)
+
+    mention_msg = "<@!{}>".format(ctx.message.author.id)
     channel = ctx.message.channel
+
     if (img_pattern.match(message)):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
         new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
         e = discord.Embed()
+        e.description = mention_msg
         e.set_image(url=new_message)
+
         await bot.send_message(channel, embed=e)
+        await bot.delete_message(ctx.message)
+
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
         new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif?v=1" 
-        print(new_message)
         e = discord.Embed()
+        e.description = mention_msg
         e.set_image(url=new_message)
+
         await bot.send_message(channel, embed=e)
+        await bot.delete_message(ctx.message)
+
     else:
         await bot.say("That's not a custom emoji. Try again")
-        
+        await bot.delete_message(ctx.message)
+
 @bot.command()
 async def goat():
     await bot.say("https://cdn.modernfarmer.com/wp-content/uploads/2013/09/saanen.jpg")
