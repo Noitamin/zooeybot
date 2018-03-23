@@ -14,7 +14,7 @@ In Fedora
 ```sudo yum install```
 
 After dependencies are installed, run the following   
-```python3 -m pip install -U discord.py
+```python3 -m pip install -U discord.py```
 
 or if you want discord.py development with voice  
 ```python3 -m pip install -U discord.py[voice]```
