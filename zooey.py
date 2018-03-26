@@ -79,9 +79,10 @@ async def goat():
 @bot.command(pass_context=True)
 async def intense(ctx, message):
     """Intensify a given emoji"""
-    print('ok')
+    #print('ok')
     img_pattern = re.compile("\<\:.+\:\d+\>")
 
+    mention_msg = "<@!{}>".format(ctx.message.author.id)
     channel = ctx.message.channel
 
     if (img_pattern.match(message)):
@@ -126,7 +127,9 @@ async def intense(ctx, message):
 
         kargs = {'fps': 60}
         imageio.mimsave('temp.gif', images, 'GIF', **kargs)
+        await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
+        await bot.delete_message(ctx.message)
         os.remove('temp.gif')
 
     else:
