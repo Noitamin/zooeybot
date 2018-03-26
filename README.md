@@ -6,6 +6,7 @@ Install the following packages via a package manager BEFORE installing discord.p
 - python3.5+
 - python3.5-dev
 - libffi-dev (required only if you're installing discord.py with voice)
+- imageio
 
 In Debian  
 ```sudo apt install```
