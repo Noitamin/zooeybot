@@ -14,10 +14,9 @@ In Fedora
 ```sudo yum install```
 
 After dependencies are installed, run the following   
-```python3 -m pip install -U discord.py imageio```
+```python3 setup.py```
 
-or if you want discord.py development with voice  
-```python3 -m pip install -U discord.py[voice] imageio```
+Note that if you choose to install with voice you must have libffi-dev installed.
 
 Create secrets.py in directory and insert TOKEN = 'Your token here'
 [![Feature Requests](http://feathub.com/Noitamin/zooeybot?format=svg)](http://feathub.com/Noitamin/zooeybot)
