@@ -80,7 +80,6 @@ async def big(ctx, message):
 
     else:
         await bot.say("That's not a custom emoji. Try again")
-        await bot.delete_message(ctx.message)
 
 @bot.command()
 async def goat():
