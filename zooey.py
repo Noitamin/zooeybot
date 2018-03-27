@@ -7,6 +7,8 @@ import requests
 from io import BytesIO
 import imageio
 import os
+import numpy
+import helpers
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
@@ -121,9 +123,11 @@ async def intense(ctx, message):
             shift_img = Image.new('RGBA', dims, (0, 0, 0, 0))
             shift_img.paste(img, coords, mask=img)
             # transfer from PIL to imageio
-            shift_img.crop(crop_box).save('temp.png')
-            images.append(imageio.imread('temp.png'))
-            os.remove('temp.png')
+            # shift_img.crop(crop_box).save('temp.png')
+            # images.append(imageio.imread('temp.png'))
+            frame = helpers.PIL2numpy(shift_img.crop(crop_box))
+            images.append(frame)
+            # os.remove('temp.png')
 
         kargs = {'fps': 60}
         imageio.mimsave('temp.gif', images, 'GIF', **kargs)
