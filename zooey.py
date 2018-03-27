@@ -50,22 +50,30 @@ async def big(ctx, message):
 
     if (img_pattern.match(message)):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
-        new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
-        e = discord.Embed()
-        e.description = mention_msg
-        e.set_image(url=new_message)
+        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
 
-        await bot.send_message(channel, embed=e)
+        response = requests.get(emoji_url)
+        img = imageio.imread(BytesIO(response.content))
+        imageio.imwrite('temp.png', img, 'PNG')
+
+        await bot.say(mention_msg)
+        await bot.send_file(channel, 'temp.png')
+        os.remove('temp.png')
         await bot.delete_message(ctx.message)
 
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
-        new_message = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif?v=1" 
-        e = discord.Embed()
-        e.description = mention_msg
-        e.set_image(url=new_message)
+        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif?v=1" 
 
-        await bot.send_message(channel, embed=e)
+        response = requests.get(emoji_url)
+        img = imageio.mimread(BytesIO(response.content))
+        reader = imageio.get_reader(BytesIO(response.content))
+        fps = reader.get_meta_data()['duration']
+        imageio.mimwrite('temp.gif', img, 'GIF', fps=fps)
+
+        await bot.say(mention_msg)
+        await bot.send_file(channel, 'temp.gif')
+        os.remove('temp.gif')
         await bot.delete_message(ctx.message)
 
     else:
@@ -93,7 +101,8 @@ async def intense(ctx, message):
         # fetch image from url without having to save it somewhere
         # print('waiting for response')
         response = requests.get(emoji_url)
-        img = Image.open(BytesIO(response.content))
+        rgba_mask = Image.new("RGBA", (220, 220), (255, 255, 255))
+        img = Image.open(BytesIO(response.content)).convert("RGBA")
 
         # print('got response')
 
@@ -129,8 +138,8 @@ async def intense(ctx, message):
         imageio.mimsave('temp.gif', images, 'GIF', **kargs)
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
-        await bot.delete_message(ctx.message)
         os.remove('temp.gif')
+        await bot.delete_message(ctx.message)
 
     else:
         await bot.say("That's not a custom emoji. Try again")
