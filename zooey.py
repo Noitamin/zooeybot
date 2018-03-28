@@ -109,8 +109,8 @@ async def intense(ctx, message):
 
         # image dimensions
         dims = img.size
-        width = dims[0]
-        height = dims[1]
+        width = dims[1]
+        height = dims[0]
 
         # allow shifting up to 10% of the image dimensions
         w_bound = round(width/10)
@@ -128,7 +128,7 @@ async def intense(ctx, message):
         # generate frames
         for i in range(0, num_frames):
             coords = (round(w_bound*coords_w[i]), round(h_bound*coords_h[i]))
-            shift_img = Image.new('RGBA', dims, (0, 0, 0, 0))
+            shift_img = Image.new('RGBA', (dims[1], dims[0]), (0, 0, 0, 0))
             shift_img.paste(img, coords, mask=img)
             # transfer from PIL to imageio
             # shift_img.crop(crop_box).save('temp.png')
