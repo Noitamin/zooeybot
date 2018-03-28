@@ -14,7 +14,7 @@ In Fedora
 ```sudo yum install```
 
 After dependencies are installed, run the following   
-```python3 setup.py```
+```sudo python3 setup.py```
 
 Note that if you choose to install with voice you must have libffi-dev installed.
 

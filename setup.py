@@ -13,5 +13,5 @@ else:
     sys.exit()
 
 pip.main(["install", "requests"])
-pip.main(["install", "pillow"])
+pip.main(["install", "pillow==5.0"])
 pip.main(["install", "imageio"])
