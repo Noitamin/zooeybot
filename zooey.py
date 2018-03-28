@@ -70,8 +70,8 @@ async def big(ctx, message):
         response = requests.get(emoji_url)
         img = imageio.mimread(BytesIO(response.content))
         reader = imageio.get_reader(BytesIO(response.content))
-        fps = reader.get_meta_data()['duration']
-        imageio.mimwrite('temp.gif', img, 'GIF', fps=fps)
+        duration = reader.get_meta_data()['duration']
+        imageio.mimwrite('temp.gif', img, 'GIF', duration=duration)
 
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
