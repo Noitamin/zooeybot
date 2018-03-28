@@ -74,10 +74,23 @@ async def big(ctx, message):
         frames = []
         nframes = 0 
         img = Image.open(BytesIO(response.content))
+        dims = img.size
+        pal = img.getpalette()
 
+        #resize each frame and apply original palatte and save to frame list
         while img:
-            frames.append(img) 
+            if not img.getpalette():
+                img.putpalette(pal)
+
+            img.size[0]//2
+            img.size[1]//2
+
+            new_frame = Image.new('RGBA', img.size)
+            new_frame.paste(img, (0, 0), img.convert('RGBA'))
+            frames.append(new_frame) 
+
             nframes += 1
+
             try:
                 img.seek(nframes)
             except EOFError:
