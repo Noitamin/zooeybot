@@ -3,6 +3,7 @@ from discord.ext import commands
 import re
 from secrets import TOKEN
 from PIL import Image
+from PIL import ImageSequence
 import requests
 from io import BytesIO
 import imageio
@@ -65,13 +66,29 @@ async def big(ctx, message):
 
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif?v=1" 
+        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif" 
 
+        #save each frame of the gif then reconstruct it in a list
         response = requests.get(emoji_url)
-        img = imageio.mimread(BytesIO(response.content))
-        reader = imageio.get_reader(BytesIO(response.content))
-        fps = reader.get_meta_data()['duration']
-        imageio.mimwrite('temp.gif', img, 'GIF', fps=fps)
+        transparent_color = 255
+        frames = []
+        nframes = 0 
+        img = Image.open(BytesIO(response.content))
+
+        while img:
+            frames.append(img) 
+            nframes += 1
+            try:
+                img.seek(nframes)
+            except EOFError:
+                break;
+        
+        #basically stolen from 'intense' command's method to save frames into gif   
+        frames[0].save(fp='temp.gif', format='gif', save_all=True,
+                       append_images=frames[1:], duration=30, loop=0,
+                       background=transparent_color,
+                       transparency=transparent_color,
+                       optimize=False, disposal=2)
 
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
@@ -151,7 +168,7 @@ async def intense(ctx, message):
         # save_all=True required for animation
         # loop=0 loops gif forever
         # set background color and transparency color to 255
-        # optimize=False prevents PIL from removing color 255
+        # Optimize=False prevents PIL from removing color 255
         # disposal=2 stops ghosting issue
         images[0].save(fp='temp.gif', format='gif', save_all=True,
                        append_images=images[1:], duration=30, loop=0,
