@@ -102,7 +102,6 @@ async def intense(ctx, message):
         # fetch image from url without having to save it somewhere
         # print('waiting for response')
         response = requests.get(emoji_url)
-        rgba_mask = Image.new("RGBA", (220, 220), (255, 255, 255))
         img = Image.open(BytesIO(response.content)).convert("RGBA")
 
         # print('got response')
@@ -125,20 +124,22 @@ async def intense(ctx, message):
         num_frames = 6
         images = []
 
+        alpha = img.split()[3]
+        img = img.convert('P', palette=Image.ADAPTIVE, colors=255)
+        mask = Image.eval(alpha, lambda a: 255 if a <= 128 else 0)
+        img.paste(255, mask)
+
         # generate frames
         for i in range(0, num_frames):
             coords = (round(w_bound*coords_w[i]), round(h_bound*coords_h[i]))
-            shift_img = Image.new('RGBA', (dims[1], dims[0]), (0, 0, 0, 0))
-            shift_img.paste(img, coords, mask=img)
-            # transfer from PIL to imageio
-            # shift_img.crop(crop_box).save('temp.png')
-            # images.append(imageio.imread('temp.png'))
-            frame = helpers.PIL2numpy(shift_img.crop(crop_box))
-            images.append(frame)
-            # os.remove('temp.png')
+            box = (crop_box[0]+coords[0], crop_box[1]+coords[1],
+                   crop_box[2]+coords[0], crop_box[3]+coords[1])
+            images.append(img.crop(box))
 
-        kargs = {'fps': 60}
-        imageio.mimsave('temp.gif', images, 'GIF', **kargs)
+        images[0].save(fp='temp.gif', format='gif', save_all=True,
+                       append_images=images[1:], duration=30, loop=0,
+                       background=255, transparency=255, disposal=2)
+
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
         os.remove('temp.gif')
