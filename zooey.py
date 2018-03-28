@@ -55,8 +55,8 @@ async def big(ctx, message):
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
 
         response = requests.get(emoji_url)
-        img = imageio.imread(BytesIO(response.content))
-        imageio.imwrite('temp.png', img, 'PNG')
+        img = Image.open(BytesIO(response.content)).convert("RGBA")
+        img.save('temp.png') 
 
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.png')
