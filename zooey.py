@@ -125,8 +125,13 @@ async def intense(ctx, message):
         num_frames = 6
         images = []
 
+        # We have RGBA data but .gifs are a palette-based format
+        # Extract alpha channel to use as a mask
         alpha = img.split()[3]
+        # Convert base emoji to palette-based with 255 colors
         img = img.convert('P', palette=Image.ADAPTIVE, colors=255)
+        # Paste color 256 (index 255) over all pixels with alpha < 128
+        # Guaranteed not to be used because we only used 255 colors
         mask = Image.eval(alpha, lambda a: 255 if a <= 128 else 0)
         img.paste(255, mask)
 
@@ -137,6 +142,10 @@ async def intense(ctx, message):
                    crop_box[2]+coords[0], crop_box[3]+coords[1])
             images.append(img.crop(box))
 
+        # save_all=True required for animation
+        # loop=0 loops gif forever
+        # set background color and transparency color to 255
+        # disposal=2 stops ghosting issue
         images[0].save(fp='temp.gif', format='gif', save_all=True,
                        append_images=images[1:], duration=30, loop=0,
                        background=255, transparency=255, disposal=2)
