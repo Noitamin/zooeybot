@@ -102,7 +102,10 @@ async def intense(ctx, message):
         # fetch image from url without having to save it somewhere
         # print('waiting for response')
         response = requests.get(emoji_url)
-        img = Image.open(BytesIO(response.content)).convert("RGBA")
+        img = Image.open(BytesIO(response.content))
+        # Check for palette-based image
+        if img.mode != 'RGBA':
+            img = img.convert('RGBA')
 
         # print('got response')
 
@@ -124,10 +127,19 @@ async def intense(ctx, message):
         num_frames = 6
         images = []
 
+        # We have RGBA data but .gifs are a palette-based format
+        # Extract alpha channel to use as a mask
         alpha = img.split()[3]
+
+        # Convert base emoji to palette-based with 255 colors
         img = img.convert('P', palette=Image.ADAPTIVE, colors=255)
-        mask = Image.eval(alpha, lambda a: 255 if a <= 128 else 0)
-        img.paste(255, mask)
+
+        # Paste color 256 (index 255) over all pixels with alpha < 128
+        # Guaranteed not to be used because we only used 255 colors
+        a_cutoff = 128
+        transparent_color = 255
+        mask = Image.eval(alpha, lambda a: 255 if a <= a_cutoff else 0)
+        img.paste(transparent_color, mask)
 
         # generate frames
         for i in range(0, num_frames):
@@ -136,9 +148,16 @@ async def intense(ctx, message):
                    crop_box[2]+coords[0], crop_box[3]+coords[1])
             images.append(img.crop(box))
 
+        # save_all=True required for animation
+        # loop=0 loops gif forever
+        # set background color and transparency color to 255
+        # optimize=False prevents PIL from removing color 255
+        # disposal=2 stops ghosting issue
         images[0].save(fp='temp.gif', format='gif', save_all=True,
                        append_images=images[1:], duration=30, loop=0,
-                       background=255, transparency=255, disposal=2)
+                       background=transparent_color,
+                       transparency=transparent_color,
+                       optimize=False, disposal=2)
 
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
