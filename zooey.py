@@ -247,7 +247,7 @@ async def jail_stats(ctx, message):
     if helpers.userInServer(ctx.message.server, message, 'mention'):
 
         # Get user id and generate mention for later
-        id_digits = re.search("^<@(\d+)>$", message)
+        id_digits = re.search("^<@!{0,1}(\d+)>$", message)
         userid = int(id_digits.group(1))
         mention_msg = "<@!{}>".format(userid)
 
@@ -276,11 +276,12 @@ async def jail(ctx, message):
     # Connect to db
     db_obj = processDB.db('{}.db'.format(ctx.message.server.id))
 
+    print("This is message:", message)
     # Check to make sure mentioned user even exists on this server
     if helpers.userInServer(ctx.message.server, message, 'mention'):
 
         # Get user id and generate mention for later
-        id_digits = re.search("^<@(\d+)>$", message)
+        id_digits = re.search("^<@!{0,1}(\d+)>$", message)
         userid = int(id_digits.group(1))
         mention_msg = "<@!{}>".format(userid)
 
