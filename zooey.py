@@ -1,4 +1,4 @@
-import discord
+ord
 from discord.ext import commands
 import re
 from secrets import TOKEN
@@ -10,6 +10,8 @@ import imageio
 import os
 import numpy
 import helpers
+import random
+import string
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
@@ -20,6 +22,37 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+
+@bot.event
+async def on_message(message):
+    scream_pattern = re.compile("^[aA]{4,}$")
+    no_chance = 0.10
+    birb_chance = 0.25
+    scream_chance = 0.40
+    rand_chance = random.uniform(0.0, 0.9)
+
+    if (scream_pattern.match(message.content)):
+        if rand_chance < no_chance:
+            print("no chance", rand_chance)
+            if message.author.id != bot.user.id: 
+                await bot.send_message(message.channel, "no.")
+                await bot.process_commands(message)
+
+        elif rand_chance < birb_chance:
+            response = requests.get("http://i0.kym-cdn.com/photos/images/original/001/209/872/bc9.jpg")
+            img = Image.open(BytesIO(response.content))
+            img.save('temp.png') 
+            await bot.send_file(message.channel, 'temp.png')
+            await bot.process_commands(message)
+
+        elif rand_chance < scream_chance:
+            print("scream chance", rand_chance)
+            scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 15)))
+            await bot.send_message(message.channel, scream_msg) 
+            await bot.process_commands(message)
+    else:
+        await bot.process_commands(message)
+        return
 
 
 @bot.command()
