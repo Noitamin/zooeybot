@@ -10,7 +10,7 @@ def userInServer(server, user, mode):
     # Accepts discord server object and two strings as arguments
     # The user can be specified by mention string, id, or name.
     if mode is 'mention':
-        id_digits = re.search("^<@(\d+)>$", user)
+        id_digits = re.search("^<@!{0,1}(\d+)>$", user)
         if id_digits:
             member_list = [member.id for member in server.members]
             if id_digits.group(1) in member_list:
