@@ -2,16 +2,16 @@
 Bot for discord shenanigans 
 
 # Requirements
-Install the following packages via a package manager BEFORE installing discord.py  
-- python3.5+
-- python3.5-dev
-- libffi-dev (required only if you're installing discord.py with voice)
-
+Install the following packages via a package manager BEFORE running setup.py  
 In Debian  
 ```sudo apt install```
 
 In Fedora  
 ```sudo yum install```
+
+- python3.5+
+- python3.5-dev
+- libffi-dev (required only if you're installing discord.py with voice)
 
 After dependencies are installed, run the following   
 ```sudo python3 setup.py```
@@ -19,4 +19,3 @@ After dependencies are installed, run the following
 Note that if you choose to install with voice you must have libffi-dev installed.
 
 Create secrets.py in directory and insert TOKEN = 'Your token here'
-[![Feature Requests](http://feathub.com/Noitamin/zooeybot?format=svg)](http://feathub.com/Noitamin/zooeybot)

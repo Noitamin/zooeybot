@@ -1,8 +1,9 @@
-import discord
+ord
 from discord.ext import commands
 import re
 from secrets import TOKEN
 from PIL import Image
+from PIL import ImageSequence
 import requests
 from io import BytesIO
 import imageio
@@ -12,6 +13,8 @@ import helpers
 import sqlite3
 import processDB
 from datetime import datetime
+import random
+import string
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
@@ -26,6 +29,37 @@ async def on_ready():
     for server in bot.servers:
         db_obj = processDB.db('{}.db'.format(server.id))
         db_obj.update_users(server)
+
+@bot.event
+async def on_message(message):
+    scream_pattern = re.compile("^[aA]{4,}$")
+    no_chance = 0.10
+    birb_chance = 0.25
+    scream_chance = 0.40
+    rand_chance = random.uniform(0.0, 0.9)
+
+    if (scream_pattern.match(message.content)):
+        if rand_chance < no_chance:
+            print("no chance", rand_chance)
+            if message.author.id != bot.user.id: 
+                await bot.send_message(message.channel, "no.")
+                await bot.process_commands(message)
+
+        elif rand_chance < birb_chance:
+            response = requests.get("http://i0.kym-cdn.com/photos/images/original/001/209/872/bc9.jpg")
+            img = Image.open(BytesIO(response.content))
+            img.save('temp.png') 
+            await bot.send_file(message.channel, 'temp.png')
+            await bot.process_commands(message)
+
+        elif rand_chance < scream_chance:
+            print("scream chance", rand_chance)
+            scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 15)))
+            await bot.send_message(message.channel, scream_msg) 
+            await bot.process_commands(message)
+    else:
+        await bot.process_commands(message)
+        return
 
 @bot.command()
 async def hello():
@@ -61,8 +95,8 @@ async def big(ctx, message):
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
 
         response = requests.get(emoji_url)
-        img = imageio.imread(BytesIO(response.content))
-        imageio.imwrite('temp.png', img, 'PNG')
+        img = Image.open(BytesIO(response.content)).convert("RGBA")
+        img.save('temp.png') 
 
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.png')
@@ -71,13 +105,42 @@ async def big(ctx, message):
 
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif?v=1" 
+        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif" 
 
+        #save each frame of the gif then reconstruct it in a list
         response = requests.get(emoji_url)
-        img = imageio.mimread(BytesIO(response.content))
-        reader = imageio.get_reader(BytesIO(response.content))
-        fps = reader.get_meta_data()['duration']
-        imageio.mimwrite('temp.gif', img, 'GIF', fps=fps)
+        transparent_color = 255
+        frames = []
+        nframes = 0 
+        img = Image.open(BytesIO(response.content))
+        dims = img.size
+        pal = img.getpalette()
+
+        #resize each frame and apply original palatte and save to frame list
+        while img:
+            if not img.getpalette():
+                img.putpalette(pal)
+
+            img.size[0]//2
+            img.size[1]//2
+
+            new_frame = Image.new('RGBA', img.size)
+            new_frame.paste(img, (0, 0), img.convert('RGBA'))
+            frames.append(new_frame) 
+
+            nframes += 1
+
+            try:
+                img.seek(nframes)
+            except EOFError:
+                break;
+        
+        #basically stolen from 'intense' command's method to save frames into gif   
+        frames[0].save(fp='temp.gif', format='gif', save_all=True,
+                       append_images=frames[1:], duration=30, loop=0,
+                       background=transparent_color,
+                       transparency=transparent_color,
+                       optimize=False, disposal=2)
 
         await bot.say(mention_msg)
         await bot.send_file(channel, 'temp.gif')
@@ -86,7 +149,6 @@ async def big(ctx, message):
 
     else:
         await bot.say("That's not a custom emoji. Try again")
-        await bot.delete_message(ctx.message)
 
 @bot.command()
 async def goat():
@@ -158,7 +220,7 @@ async def intense(ctx, message):
         # save_all=True required for animation
         # loop=0 loops gif forever
         # set background color and transparency color to 255
-        # optimize=False prevents PIL from removing color 255
+        # Optimize=False prevents PIL from removing color 255
         # disposal=2 stops ghosting issue
         images[0].save(fp='temp.gif', format='gif', save_all=True,
                        append_images=images[1:], duration=30, loop=0,
@@ -173,7 +235,6 @@ async def intense(ctx, message):
 
     else:
         await bot.say("That's not a custom emoji. Try again")
-        await bot.delete_message(ctx.message)
 
 @bot.command(pass_context=True)
 async def jail_stats(ctx, message):
