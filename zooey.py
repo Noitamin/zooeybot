@@ -10,6 +10,9 @@ import imageio
 import os
 import numpy
 import helpers
+import sqlite3
+import processDB
+from datetime import datetime
 import random
 import string
 
@@ -22,6 +25,10 @@ async def on_ready():
     print(bot.user.name)
     print(bot.user.id)
     print('------')
+    print('Performing database checks...')
+    for server in bot.servers:
+        db_obj = processDB.db('{}.db'.format(server.id))
+        db_obj.update_users(server)
 
 @bot.event
 async def on_message(message):
@@ -53,7 +60,6 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
         return
-
 
 @bot.command()
 async def hello():
@@ -230,5 +236,79 @@ async def intense(ctx, message):
     else:
         await bot.say("That's not a custom emoji. Try again")
 
+@bot.command(pass_context=True)
+async def jail_stats(ctx, message):
+    """View mentioned user's jail history"""
+
+    # Connect to db
+    db_obj = processDB.db('{}.db'.format(ctx.message.server.id))
+
+    # Check to make sure mentioned user even exists on this server
+    if helpers.userInServer(ctx.message.server, message, 'mention'):
+
+        # Get user id and generate mention for later
+        id_digits = re.search("^<@(\d+)>$", message)
+        userid = int(id_digits.group(1))
+        mention_msg = "<@!{}>".format(userid)
+
+        # Zooey is never in jail
+        if userid == int(bot.user.id):
+            await bot.say("Why would anyone want to put {} in jail?".format(mention_msg))
+            await bot.delete_message(ctx.message)
+        else:
+            jail_count = db_obj.get(userid, 'jail_count')
+            str = "{} has been sent to jail {} times.".format(mention_msg, jail_count)
+            jail_last = db_obj.get(userid, 'jail_last')
+            if jail_last is None:
+                jail_last = 0
+            else:
+                str += " {} was last sent to jail on {} UTC".format(
+                    mention_msg, datetime.utcfromtimestamp(jail_last))
+            await bot.say(str)
+            await bot.delete_message(ctx.message)
+
+@bot.command(pass_context=True)
+async def jail(ctx, message):
+    """Send mentioned user to jail"""
+
+    author_mention_msg = "<@!{}>".format(ctx.message.author.id)
+
+    # Connect to db
+    db_obj = processDB.db('{}.db'.format(ctx.message.server.id))
+
+    # Check to make sure mentioned user even exists on this server
+    if helpers.userInServer(ctx.message.server, message, 'mention'):
+
+        # Get user id and generate mention for later
+        id_digits = re.search("^<@(\d+)>$", message)
+        userid = int(id_digits.group(1))
+        mention_msg = "<@!{}>".format(userid)
+
+        # Can't put Zooey in jail
+        if userid == int(bot.user.id):
+            await bot.say("{} Nice try.".format(author_mention_msg))
+            await bot.delete_message(ctx.message)
+        else:
+            # Check last time user was in jail
+            jail_last = db_obj.get(userid, 'jail_last')
+
+            if jail_last is not None:
+                elapsed = datetime.utcnow().timestamp() - jail_last
+                if elapsed > 300:  # 5 minute timeout
+                    db_obj.increment(userid, 'jail_count')
+                    db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
+                    await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
+                    await bot.delete_message(ctx.message)
+                else:
+                    await bot.say("{} That user is already in jail.".format(author_mention_msg))
+                    await bot.delete_message(ctx.message)
+            else:
+                db_obj.set(userid, 'jail_count', 1)
+                db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
+                await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
+                await bot.delete_message(ctx.message)
+    else:
+        await bot.say("{} User not found.".format(author_mention_msg))
+        await bot.delete_message(ctx.message)
 
 bot.run(TOKEN)
