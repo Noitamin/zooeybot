@@ -36,27 +36,26 @@ async def on_message(message):
     no_chance = 0.10
     birb_chance = 0.25
     scream_chance = 0.40
-    rand_chance = random.uniform(0.0, 0.9)
+    rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
 
-    if (scream_pattern.match(message.content)):
-        if rand_chance < no_chance:
-            print("no chance", rand_chance)
+    if (scream_pattern.match(message.content)) and rand_chance != '':
+        if rand_chance == 'no':
             if message.author.id != bot.user.id: 
                 await bot.send_message(message.channel, "no.")
                 await bot.process_commands(message)
 
-        elif rand_chance < birb_chance:
+        elif rand_chance == 'birb':
             response = requests.get("http://i0.kym-cdn.com/photos/images/original/001/209/872/bc9.jpg")
             img = Image.open(BytesIO(response.content))
             img.save('temp.png') 
             await bot.send_file(message.channel, 'temp.png')
             await bot.process_commands(message)
 
-        elif rand_chance < scream_chance:
-            print("scream chance", rand_chance)
-            scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 15)))
+        elif rand_chance == 'scream':
+            scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 25)))
             await bot.send_message(message.channel, scream_msg) 
             await bot.process_commands(message)
+
     else:
         await bot.process_commands(message)
         return
