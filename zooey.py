@@ -1,4 +1,4 @@
-ord
+import discord.ext
 from discord.ext import commands
 import re
 from secrets import TOKEN
@@ -29,6 +29,8 @@ async def on_ready():
     for server in bot.servers:
         db_obj = processDB.db('{}.db'.format(server.id))
         db_obj.update_users(server)
+
+    await bot.change_presence(game=discord.Game(name="with life"))
 
 @bot.event
 async def on_message(message):
