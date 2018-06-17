@@ -35,9 +35,6 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     scream_pattern = re.compile("^[aA]{4,}$")
-    no_chance = 0.10
-    birb_chance = 0.25
-    scream_chance = 0.40
     rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
 
     if (scream_pattern.match(message.content)) and rand_chance != '':
@@ -295,11 +292,15 @@ async def jail(ctx, message):
             jail_last = db_obj.get(userid, 'jail_last')
 
             if jail_last is not None:
+                rand_chance = numpy.random.choice(['shotty', ''], 1, p=[0.90, 0.10])
                 elapsed = datetime.utcnow().timestamp() - jail_last
                 if elapsed > 300:  # 5 minute timeout
                     db_obj.increment(userid, 'jail_count')
                     db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
                     await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
+                    if rand_chance == 'birb':
+                        await bot.send_file(message.channel, 'assets/jail_shotty.jpg')
+                        await bot.process_commands(message)
                     await bot.delete_message(ctx.message)
                 else:
                     await bot.say("{} That user is already in jail.".format(author_mention_msg))
