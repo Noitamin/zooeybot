@@ -16,6 +16,9 @@ from datetime import datetime
 import random
 import string
 
+assets_path = os.path.dirname(os.path.abspath(__file__))
+print(assets_path)
+
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
 
@@ -294,7 +297,7 @@ async def jail(ctx, message):
             jail_last = db_obj.get(userid, 'jail_last')
 
             if jail_last is not None:
-                rand_chance = numpy.random.choice(['shotty', ''], 1, p=[0.2, 0.8])
+                rand_chance = numpy.random.choice(['shotty', ''], 1, p=[0.8, 0.2])
                 elapsed = datetime.utcnow().timestamp() - jail_last
 
                 if elapsed > 300:  # 5 minute timeout
@@ -303,7 +306,8 @@ async def jail(ctx, message):
                     await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
 
                     if rand_chance == 'shotty':
-                        await bot.send_file(ctx.message.channel, 'assets/jail_shotty.jpg')
+                        print("im super shotty")
+                        await bot.send_file(ctx.message.channel, os.path.join(assets_path, 'assets/jail_shotty.jpg'))
                         #await bot.process_commands(ctx.message)
                         await bot.say("Moshi moshi, lolice desu.")
                     await bot.delete_message(ctx.message)
