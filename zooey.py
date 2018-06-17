@@ -35,9 +35,6 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     scream_pattern = re.compile("^[aA]{4,}$")
-    no_chance = 0.10
-    birb_chance = 0.25
-    scream_chance = 0.40
     rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
 
     if (scream_pattern.match(message.content)) and rand_chance != '':
