@@ -292,11 +292,15 @@ async def jail(ctx, message):
             jail_last = db_obj.get(userid, 'jail_last')
 
             if jail_last is not None:
+                rand_chance = numpy.random.choice(['shotty', ''], 1, p=[0.90, 0.10])
                 elapsed = datetime.utcnow().timestamp() - jail_last
                 if elapsed > 300:  # 5 minute timeout
                     db_obj.increment(userid, 'jail_count')
                     db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
                     await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
+                    if rand_chance == 'birb':
+                        await bot.send_file(message.channel, 'assets/jail_shotty.jpg')
+                        await bot.process_commands(message)
                     await bot.delete_message(ctx.message)
                 else:
                     await bot.say("{} That user is already in jail.".format(author_mention_msg))
