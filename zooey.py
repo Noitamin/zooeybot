@@ -154,17 +154,83 @@ async def goat():
     await bot.say("https://cdn.modernfarmer.com/wp-content/uploads/2013/09/saanen.jpg")
 
 @bot.command(pass_context=True)
-async def intense(ctx, message):
+async def intense(ctx, *args):
     """Intensify a given emoji"""
+    # options:
+    # -speed [val] -> sets duration according to speed array.
+    #   note that 20 is the fastest possible duration
+    # -duration [val] -> sets duration explicitly. not user-friendly.
+    # -power [val] -> sets amplitude of displacement as a percentage of the default.
+    # -red [val] -> tints red with alpha = val. default 123.
+    #   note: alpha 0 is fully red and 255 is transparent, so not user-friendly; would expect
+    #   higher val = more red. add array version like speeds array
+
     #print('ok')
+    image_in = args[0]
+    # Default values
+    dur = 30
+    speeds = [90, 80, 70, 60, 50, 40, 30, 20]
+    intensity = 1
+    flag_red = 0
+    red_alpha = 123
+
+    arg_i = 1
+    while arg_i < len(args):
+        if args[arg_i] == "-duration":
+            if arg_i+1 < len(args):
+                try:
+                    dur = int(args[arg_i+1])
+                    arg_i += 2
+                except:
+                    arg_i += 1
+            else:
+                arg_i += 1
+        elif args[arg_i] == "-speed":
+            if arg_i + 1 < len(args):
+                try:
+                    speed_in = min(max(int(args[arg_i+1]), 0), len(speeds)-1)
+                    arg_i += 2
+                except:
+                    speed_in = 3
+                    arg_i += 1
+                if speed_in > 4:
+                    speed_in = 4
+                dur = speeds[speed_in]
+            else:
+                arg_i += 1
+        elif args[arg_i] == "-power":
+            if arg_i + 1 < len(args):
+                try:
+                    intensity = int(args[arg_i+1])/100
+                    arg_i += 2
+                except:
+                    arg_i += 1
+            else:
+                arg_i += 1
+        elif args[arg_i] == "-red":
+            flag_red = 1
+            if arg_i + 1 < len(args):
+                try:
+                    red_alpha = min(max(int(args[arg_i+1]), 0), 255)
+                    arg_i += 2
+                except:
+                    arg_i += 1
+            else:
+                arg_i += 1
+        else:
+            arg_i += 1
+
+
+
+
     img_pattern = re.compile("\<\:.+\:\d+\>")
 
     mention_msg = "<@!{}>".format(ctx.message.author.id)
     channel = ctx.message.channel
 
-    if (img_pattern.match(message)):
+    if (img_pattern.match(image_in)):
         # print('matched img_pattern')
-        emoji_id = re.sub(r'\<\:\D+|\>', '', message)
+        emoji_id = re.sub(r'\<\:\D+|\>', '', image_in)
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
 
         # fetch image from url without having to save it somewhere
@@ -199,6 +265,12 @@ async def intense(ctx, message):
         # Extract alpha channel to use as a mask
         alpha = img.split()[3]
 
+        # Apply red tint if flag provided
+        if flag_red == 1:
+            red_overlay = Image.new('RGB',img.size,(255,0,0))
+            overlay_mask = Image.new('RGBA',img.size,(0,0,0,red_alpha))
+            img = Image.composite(img,red_overlay,overlay_mask)
+
         # Convert base emoji to palette-based with 255 colors
         img = img.convert('P', palette=Image.ADAPTIVE, colors=255)
 
@@ -212,8 +284,8 @@ async def intense(ctx, message):
         # generate frames
         for i in range(0, num_frames):
             coords = (round(w_bound*coords_w[i]), round(h_bound*coords_h[i]))
-            box = (crop_box[0]+coords[0], crop_box[1]+coords[1],
-                   crop_box[2]+coords[0], crop_box[3]+coords[1])
+            box = (crop_box[0]+coords[0]*intensity, crop_box[1]+coords[1]*intensity,
+                   crop_box[2]+coords[0]*intensity, crop_box[3]+coords[1]*intensity)
             images.append(img.crop(box))
 
         # save_all=True required for animation
@@ -222,7 +294,7 @@ async def intense(ctx, message):
         # Optimize=False prevents PIL from removing color 255
         # disposal=2 stops ghosting issue
         images[0].save(fp='temp.gif', format='gif', save_all=True,
-                       append_images=images[1:], duration=30, loop=0,
+                       append_images=images[1:], duration=dur, loop=0,
                        background=transparent_color,
                        transparency=transparent_color,
                        optimize=False, disposal=2)
