@@ -15,6 +15,7 @@ import processDB
 from datetime import datetime
 import random
 import string
+from discord import Server
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
@@ -220,9 +221,6 @@ async def intense(ctx, *args):
         else:
             arg_i += 1
 
-
-
-
     img_pattern = re.compile("\<\:.+\:\d+\>")
 
     mention_msg = "<@!{}>".format(ctx.message.author.id)
@@ -231,11 +229,24 @@ async def intense(ctx, *args):
     if (img_pattern.match(image_in)):
         # print('matched img_pattern')
         emoji_id = re.sub(r'\<\:\D+|\>', '', image_in)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
+        image_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
+        image_present = True
+    elif helpers.userInServer(ctx.message.server, image_in, 'mention'):
+        # Get user id and grab avatar from corresponding object if mentioned user in server
+        # Turn this into a helper later
+        id_digits = re.search("^<@!{0,1}(\d+)>$", image_in)
+        target_id = id_digits.group(1)
+        target_obj = ctx.message.server.get_member(target_id)
+        # Can't use target_obj.avatar_url since that's webp; instead, access the png version
+        image_url = "https://cdn.discordapp.com/avatars/{0.id}/{0.avatar}.png?size=1024".format(target_obj)
+        image_present = True
+    else:
+        image_present = False
 
+    if image_present == True:
         # fetch image from url without having to save it somewhere
         # print('waiting for response')
-        response = requests.get(emoji_url)
+        response = requests.get(image_url)
         img = Image.open(BytesIO(response.content))
         # Check for palette-based image
         if img.mode != 'RGBA':
