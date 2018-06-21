@@ -15,7 +15,6 @@ import processDB
 from datetime import datetime
 import random
 import string
-from discord import Server
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
