@@ -237,8 +237,12 @@ async def intense(ctx, *args):
         target_id = id_digits.group(1)
         target_obj = ctx.message.server.get_member(target_id)
         # Can't use target_obj.avatar_url since that's webp; instead, access the png version
-        image_url = "https://cdn.discordapp.com/avatars/{0.id}/{0.avatar}.png?size=1024".format(target_obj)
-        image_present = True
+        # Check if user has an avatar
+        if target_obj.avatar == None:
+            image_present = False
+        else:
+            image_url = "https://cdn.discordapp.com/avatars/{0.id}/{0.avatar}.png?size=1024".format(target_obj)
+            image_present = True
     else:
         image_present = False
 
@@ -315,7 +319,7 @@ async def intense(ctx, *args):
         await bot.delete_message(ctx.message)
 
     else:
-        await bot.say("That's not a custom emoji. Try again")
+        await bot.say("That's not a custom emoji or user with an avatar. Try again")
 
 @bot.command(pass_context=True)
 async def jail_stats(ctx, message):
