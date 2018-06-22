@@ -19,14 +19,18 @@ import string
 assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
+startup_extensions = ["helpmenu"]
+
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
+bot.remove_command('help')
 
 @bot.event
 async def on_ready():
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
+    print('------')
     print('------')
     print('Performing database checks...')
     for server in bot.servers:
@@ -412,4 +416,15 @@ async def jail(ctx, message):
         await bot.say("{} User not found.".format(author_mention_msg))
         await bot.delete_message(ctx.message)
 
-bot.run(TOKEN)
+if __name__ == "__main__":
+    for extension in startup_extensions:
+        print('Loading cogs')
+        try:
+            bot.load_extension(extension)
+        except Exception as e:
+            exc = '{}: {}'.format(type(e).__name__, e)
+            print('Failed to load extension {}\n{}'.format(extension, exc))
+
+
+
+    bot.run(TOKEN)
