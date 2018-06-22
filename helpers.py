@@ -35,3 +35,33 @@ def userInServer(server, user, mode):
         print('ERROR: Invalid arguments')
         return False
 
+class parsed_arg(object):
+    def __init__(self):
+        self.name = None
+        self.values = []
+
+def parse_options(args):
+    # Parses input message to group options with their values
+    # We might have inputs before any options; these inputs should not begin with --
+    print(args)
+    word = 0
+    arg = parsed_arg()
+    arg.name = "input"
+    parsed_args = []
+    while word < len(args):
+        print(args[word])
+        if args[word].startswith("--"):
+            # New option; push the current arg
+            parsed_args.append(arg)
+            # Reset arg with new name
+            arg = parsed_arg()
+            arg.name = args[word]
+        else:
+            # Otherwise, this is a value pertaining to the current option
+            arg.values.append(args[word])
+        word += 1
+    # Push the last arg parsed and return
+    parsed_args.append(arg)
+    return parsed_args
+
+
