@@ -165,8 +165,9 @@ async def intense(ctx, *args):
     #   note: alpha 0 is fully red and 255 is transparent, so not user-friendly; would expect
     #   higher val = more red. add array version like speeds array
 
-    #print('ok')
-    image_in = args[0]
+    parsed_args = helpers.parse_options(args)
+
+    image_in = args[0] # hardcoded; can add to pattern with if item.name == "input"
     # Default values
     dur = 30
     speeds = [90, 80, 70, 60, 50, 40, 30, 20]
@@ -174,51 +175,29 @@ async def intense(ctx, *args):
     flag_red = 0
     red_alpha = 123
 
-    arg_i = 1
-    while arg_i < len(args):
-        if args[arg_i] == "-duration":
-            if arg_i+1 < len(args):
-                try:
-                    dur = int(args[arg_i+1])
-                    arg_i += 2
-                except:
-                    arg_i += 1
-            else:
-                arg_i += 1
-        elif args[arg_i] == "-speed":
-            if arg_i + 1 < len(args):
-                try:
-                    speed_in = min(max(int(args[arg_i+1]), 0), len(speeds)-1)
-                    arg_i += 2
-                except:
-                    speed_in = 3
-                    arg_i += 1
-                if speed_in > 4:
-                    speed_in = 4
+    for item in parsed_args:
+        if item.name == "--duration":
+            try:
+                dur = int(item.values[0])
+            except:
+                dur = 30
+        elif item.name == "--speed":
+            try:
+                speed_in = min(max(int(item.values[0]), 0), len(speeds) - 1)
                 dur = speeds[speed_in]
-            else:
-                arg_i += 1
-        elif args[arg_i] == "-power":
-            if arg_i + 1 < len(args):
-                try:
-                    intensity = int(args[arg_i+1])/100
-                    arg_i += 2
-                except:
-                    arg_i += 1
-            else:
-                arg_i += 1
-        elif args[arg_i] == "-red":
+            except:
+                dur = 30
+        elif item.name == "--power":
+            try:
+                intensity = int(item.values[0]) / 100
+            except:
+                intensity = 1
+        elif item.name == "--red":
             flag_red = 1
-            if arg_i + 1 < len(args):
-                try:
-                    red_alpha = min(max(int(args[arg_i+1]), 0), 255)
-                    arg_i += 2
-                except:
-                    arg_i += 1
-            else:
-                arg_i += 1
-        else:
-            arg_i += 1
+            try:
+                red_alpha = min(max(int(item.values[0]), 0), 255)
+            except:
+                red_alpha = 123
 
     img_pattern = re.compile("\<\:.+\:\d+\>")
 
