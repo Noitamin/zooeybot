@@ -41,7 +41,7 @@ class HelpMenu():
                         inline=False)
 
         await self.bot.send_message(channel, embed=embed)
-
+        await self.bot.delete_message(ctx.message)
 
 def setup(bot):
     bot.add_cog(HelpMenu(bot))
