@@ -42,9 +42,14 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     scream_pattern = re.compile("^[aA]{4,}$")
+    waaai_pattern = re.compile('(\\\o\\\)|(/o/)')
     rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
 
-    if (scream_pattern.match(message.content)) and rand_chance != '':
+    if (waaai_pattern.match(message.content)):
+        await bot.send_file(message.channel, "assets/waaai.jpg")
+        await bot.process_commands(message)
+
+    elif (scream_pattern.match(message.content)) and rand_chance != '':
         if rand_chance == 'no':
             if message.author.id != bot.user.id: 
                 await bot.send_message(message.channel, "no.")
