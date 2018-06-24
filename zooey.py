@@ -47,9 +47,9 @@ async def on_message(message):
 
     if (waaai_pattern.match(message.content)):
         if re.match('(\\\o\\\)', message.content):
-            await bot.send_file(message.channel, "assets/waaai_left.jpg")
+            await bot.send_file(message.channel, os.path.join(assets_path, "waaai_left.jpg"))
         else:
-            await bot.send_file(message.channel, "assets/waaai.jpg")
+            await bot.send_file(message.channel, os.path.join(assets_path, "waaai.jpg"))
         await bot.process_commands(message)
 
     elif (scream_pattern.match(message.content)) and rand_chance != '':
@@ -360,7 +360,7 @@ async def jail(ctx, message):
 
                     if rand_chance == 'shotty':
                         print("im super shotty")
-                        await bot.send_file(ctx.message.channel, os.path.join(assets_path, 'assets/jail_shotty.jpg'))
+                        await bot.send_file(ctx.message.channel, os.path.join(os.pathjoin(assets_path, "ssets_path, 'assets/jail_shotty.jpg'))
                         #await bot.process_commands(ctx.message)
                         await bot.say("Moshi moshi, lolice desu.")
                     await bot.delete_message(ctx.message)
