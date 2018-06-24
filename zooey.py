@@ -56,10 +56,7 @@ async def on_message(message):
                 await bot.process_commands(message)
 
         elif rand_chance == 'birb':
-            response = requests.get("http://i0.kym-cdn.com/photos/images/original/001/209/872/bc9.jpg")
-            img = Image.open(BytesIO(response.content))
-            img.save('temp.png') 
-            await bot.send_file(message.channel, 'temp.png')
+            await bot.send_file(message.channel, 'assets/birb_scream.jpg')
             await bot.process_commands(message)
 
         elif rand_chance == 'scream':
@@ -78,6 +75,7 @@ async def big(ctx, message):
     gif_pattern = re.compile("\<a\:.+\:\d+\>")
 
     mention_msg = "<@!{}>".format(ctx.message.author.id)
+    author_id = ctx.message.author.id
     channel = ctx.message.channel
 
     if (img_pattern.match(message)):
@@ -86,16 +84,18 @@ async def big(ctx, message):
 
         response = requests.get(emoji_url)
         img = Image.open(BytesIO(response.content)).convert("RGBA")
-        img.save('temp.png') 
+        img_name = author_id + "_temp.png"
+        img.save(img_name) 
 
         await bot.say(mention_msg)
-        await bot.send_file(channel, 'temp.png')
-        os.remove('temp.png')
+        await bot.send_file(channel, img_name)
+        os.remove(img_name)
         await bot.delete_message(ctx.message)
 
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif" 
+        gif_name = author_id + "_temp.gif"
 
         #save each frame of the gif then reconstruct it in a list
         response = requests.get(emoji_url)
@@ -126,15 +126,15 @@ async def big(ctx, message):
                 break;
         
         #basically stolen from 'intense' command's method to save frames into gif   
-        frames[0].save(fp='temp.gif', format='gif', save_all=True,
+        frames[0].save(fp=gif_name, format='gif', save_all=True,
                        append_images=frames[1:], duration=30, loop=0,
                        background=transparent_color,
                        transparency=transparent_color,
                        optimize=False, disposal=2)
 
         await bot.say(mention_msg)
-        await bot.send_file(channel, 'temp.gif')
-        os.remove('temp.gif')
+        await bot.send_file(channel, gif_name)
+        os.remove(gif_name)
         await bot.delete_message(ctx.message)
 
     else:
