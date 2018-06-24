@@ -46,7 +46,10 @@ async def on_message(message):
     rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
 
     if (waaai_pattern.match(message.content)):
-        await bot.send_file(message.channel, "assets/waaai.jpg")
+        if re.match('(\\\o\\\)', message.content):
+            await bot.send_file(message.channel, "assets/waaai_left.jpg")
+        else:
+            await bot.send_file(message.channel, "assets/waaai.jpg")
         await bot.process_commands(message)
 
     elif (scream_pattern.match(message.content)) and rand_chance != '':
