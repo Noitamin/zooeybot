@@ -15,6 +15,7 @@ import processDB
 from datetime import datetime
 import random
 import string
+import zipfile
 
 assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
@@ -378,6 +379,95 @@ async def jail(ctx, message):
     else:
         await bot.say("{} User not found.".format(author_mention_msg))
         await bot.delete_message(ctx.message)
+
+@bot.command(pass_context=True)
+async def line(ctx, *args):
+    """Post a given LINE sticker"""
+    mention_msg = "<@!{}>".format(ctx.message.author.id)
+    channel = ctx.message.channel
+    parsed_args = helpers.parse_options(args)
+
+    for item in parsed_args:
+        if item.name == "input":
+            try:
+                line_page_code = item.values[0]
+                line_sticker_number = int(item.values[1])
+            except:
+                line_page_code = -1
+                line_sticker_number = -1
+
+    if line_page_code != -1:
+
+        # Check if folder exists
+        if os.path.isdir("./assets") == False:
+            os.mkdir("./assets")
+
+        if os.path.isdir("./assets/line") == False:
+            os.mkdir("./assets/line")
+
+        line_asset_path = "./assets/line/" + line_page_code
+
+        flag_ok = 1
+
+        if os.path.isdir(line_asset_path) == False:
+            # Check if this is a real LINE sticker set
+            line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickers@2x.zip"
+            r = requests.get(line_zip, stream=True)
+
+            if r.ok:
+                # Download and extract to asset folder
+                # Skip downloading thumbnails and metadata files
+                img_pattern = re.compile("\d+@2x.png")
+                os.mkdir(line_asset_path)
+                z = zipfile.ZipFile(BytesIO(r.content))
+
+                for infile in z.namelist():
+                    if img_pattern.match(infile):
+                        z.extract(infile, line_asset_path)
+            else:
+                # try stickerpack for animated/voiced
+                line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickerpack@2x.zip"
+                r = requests.get(line_zip, stream=True)
+                if r.ok:
+                    # Download and extract to asset folder
+                    # Check for animated versions
+                    os.mkdir(line_asset_path)
+                    z = zipfile.ZipFile(BytesIO(r.content))
+                    if "animation@2x/" in [member.filename for member in z.infolist()]:
+                        # animations detected; extract these
+                        # these are APNGs so they won't be animated in discord
+                        # but fetch animated versions in case we make an APNG->gif pipeline later
+                        img_pattern = re.compile("animation@2x/\d+@2x.png")
+                        for infile in z.namelist():
+                            if img_pattern.match(infile):
+                                z.extract(infile, line_asset_path)
+                    else:
+                        # otherwise, voiced; same format as normal
+                        img_pattern = re.compile("\d+@2x.png")
+                        for infile in z.namelist():
+                            if img_pattern.match(infile):
+                                z.extract(infile, line_asset_path)
+                else:
+                    flag_ok = 0
+
+        if flag_ok == 1:
+            # Post requested sticker
+            # done through image number
+            # get list of filenames
+            file_list = sorted(os.listdir(line_asset_path))
+            try:
+                line_sticker_path = line_asset_path+"/"+file_list[line_sticker_number]
+                await bot.say(mention_msg)
+                await bot.send_file(channel, line_sticker_path)
+                await bot.delete_message(ctx.message)
+            except:
+                await bot.say("{} LINE sticker number not found.".format(mention_msg))
+
+        else:
+            await bot.say("{} LINE sticker page not found.".format(mention_msg))
+
+    else:
+        await bot.say("{} LINE sticker page not found.".format(mention_msg))
 
 if __name__ == "__main__":
     for extension in startup_extensions:
