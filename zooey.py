@@ -411,8 +411,6 @@ async def line(ctx, *args):
 
         if os.path.isdir(line_asset_path) == False:
             # Check if this is a real LINE sticker set
-            # This will only find non-voiced, non-animated stickers
-            # Can add voiced and animated versions if not r.ok
             line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickers@2x.zip"
             r = requests.get(line_zip, stream=True)
 
@@ -427,7 +425,30 @@ async def line(ctx, *args):
                     if img_pattern.match(infile):
                         z.extract(infile, line_asset_path)
             else:
-                flag_ok = 0
+                # try stickerpack for animated/voiced
+                line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickerpack@2x.zip"
+                r = requests.get(line_zip, stream=True)
+                if r.ok:
+                    # Download and extract to asset folder
+                    # Check for animated versions
+                    os.mkdir(line_asset_path)
+                    z = zipfile.ZipFile(BytesIO(r.content))
+                    if "animation@2x/" in [member.filename for member in z.infolist()]:
+                        # animations detected; extract these
+                        # these are APNGs so they won't be animated in discord
+                        # but fetch animated versions in case we make an APNG->gif pipeline later
+                        img_pattern = re.compile("animation@2x/\d+@2x.png")
+                        for infile in z.namelist():
+                            if img_pattern.match(infile):
+                                z.extract(infile, line_asset_path)
+                    else:
+                        # otherwise, voiced; same format as normal
+                        img_pattern = re.compile("\d+@2x.png")
+                        for infile in z.namelist():
+                            if img_pattern.match(infile):
+                                z.extract(infile, line_asset_path)
+                else:
+                    flag_ok = 0
 
         if flag_ok == 1:
             # Post requested sticker
