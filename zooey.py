@@ -411,42 +411,51 @@ async def line(ctx, *args):
 
         if os.path.isdir(line_asset_path) == False:
             # Check if this is a real LINE sticker set
-            line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickers@2x.zip"
+            # Try stickerpack first
+            line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickerpack@2x.zip"
             r = requests.get(line_zip, stream=True)
 
             if r.ok:
                 # Download and extract to asset folder
-                # Skip downloading thumbnails and metadata files
-                img_pattern = re.compile("\d+@2x.png")
+                # Check for animated versions first
                 os.mkdir(line_asset_path)
                 z = zipfile.ZipFile(BytesIO(r.content))
+                img_pattern = re.compile("animation@2x/\d+@2x.png")
+                flag_found = 0
+                for zip_info in z.infolist():
+                    if img_pattern.match(zip_info.filename):
+                        zip_info.filename = os.path.basename(zip_info.filename)
+                        z.extract(zip_info, line_asset_path)
+                        flag_found = 1
+                if flag_found == 1:
+                    # now convert all of these to gifs
+                    apng_list = os.listdir(line_asset_path+"")
+                    for apng in apng_list:
+                        apng_path = line_asset_path + "/" + apng
+                        helpers.APNGtoGIF(apng_path)
+                        os.remove(apng_path)
+                else:
+                    # not animated; get regular images
+                    img_pattern = re.compile("\d+@2x.png")
+                    for infile in z.namelist():
+                        if img_pattern.match(infile):
+                            z.extract(infile, line_asset_path)
 
-                for infile in z.namelist():
-                    if img_pattern.match(infile):
-                        z.extract(infile, line_asset_path)
             else:
-                # try stickerpack for animated/voiced
-                line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickerpack@2x.zip"
+                # try stickers
+                line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickers@2x.zip"
                 r = requests.get(line_zip, stream=True)
+
                 if r.ok:
                     # Download and extract to asset folder
-                    # Check for animated versions
+                    # Skip downloading thumbnails and metadata files
+                    img_pattern = re.compile("\d+@2x.png")
                     os.mkdir(line_asset_path)
                     z = zipfile.ZipFile(BytesIO(r.content))
-                    if "animation@2x/" in [member.filename for member in z.infolist()]:
-                        # animations detected; extract these
-                        # these are APNGs so they won't be animated in discord
-                        # but fetch animated versions in case we make an APNG->gif pipeline later
-                        img_pattern = re.compile("animation@2x/\d+@2x.png")
-                        for infile in z.namelist():
-                            if img_pattern.match(infile):
-                                z.extract(infile, line_asset_path)
-                    else:
-                        # otherwise, voiced; same format as normal
-                        img_pattern = re.compile("\d+@2x.png")
-                        for infile in z.namelist():
-                            if img_pattern.match(infile):
-                                z.extract(infile, line_asset_path)
+
+                    for infile in z.namelist():
+                        if img_pattern.match(infile):
+                            z.extract(infile, line_asset_path)
                 else:
                     flag_ok = 0
 

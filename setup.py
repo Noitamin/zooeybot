@@ -15,3 +15,4 @@ else:
 pip.main(["install", "requests"])
 pip.main(["install", "pillow==5.0"])
 pip.main(["install", "imageio"])
+pip.main(["install", "apng"])
