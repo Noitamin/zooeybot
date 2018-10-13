@@ -60,7 +60,7 @@ async def on_message(message):
                 await bot.process_commands(message)
 
         elif rand_chance == 'birb':
-            await bot.send_file(message.channel, 'assets/birb_scream.jpg')
+            await bot.send_file(message.channel, os.path.join(assets_path, "assets/birb_scream.jpg"))
             await bot.process_commands(message)
 
         elif rand_chance == 'scream':
@@ -103,20 +103,38 @@ async def big(ctx, message):
 
         #save each frame of the gif then reconstruct it in a list
         response = requests.get(emoji_url)
-        transparent_color = 255
         frames = []
         nframes = 0 
         img = Image.open(BytesIO(response.content))
-        dims = img.size
+        bg = []
+        transparent_color = 0
         pal = img.getpalette()
+        dur = img.info['duration']
+        disposal = []
+        if not img.getpalette():
+            img.putpalette(pal)
 
         #resize each frame and apply original palatte and save to frame list
+        if 'transparency' in img.info:
+            transparent_color = img.info['transparency']
+
+        for frame in ImageSequence.Iterator(img):
+            bg.append(frame.info['background'])
+            if 'transparency' in frame.info:
+                print("transparency", frame.info['transparency'])
+            disposal.append(frame.disposal_method)
+            print("disposal method", frame.disposal_method)
+            b = BytesIO()
+            frame.save(b, format='GIF')
+            frame = Image.open(b)
+            frames.append(frame)
+        '''
         while img:
             if not img.getpalette():
                 img.putpalette(pal)
 
-            img.size[0]//2
-            img.size[1]//2
+            #img.size[0]//2
+            #img.size[1]//2
 
             new_frame = Image.new('RGBA', img.size)
             new_frame.paste(img, (0, 0), img.convert('RGBA'))
@@ -128,13 +146,13 @@ async def big(ctx, message):
                 img.seek(nframes)
             except EOFError:
                 break;
-        
+        ''' 
         #basically stolen from 'intense' command's method to save frames into gif   
         frames[0].save(fp=gif_name, format='gif', save_all=True,
-                       append_images=frames[1:], duration=30, loop=0,
-                       background=transparent_color,
+                       append_images=frames[1:], duration=dur, loop=0,
+                       background=bg,
                        transparency=transparent_color,
-                       optimize=False, disposal=2)
+                       optimize=False, disposal=disposal)
 
         await bot.say(mention_msg)
         await bot.send_file(channel, gif_name)
