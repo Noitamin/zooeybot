@@ -32,6 +32,30 @@ class db:
         except Exception as e:
             print(e)
 
+        try:
+            self.cursor.execute("ALTER TABLE users ADD COLUMN crystals INTEGER DEFAULT 0")
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+
+        try:
+            self.cursor.execute("ALTER TABLE users ADD COLUMN singles INTEGER DEFAULT 0")
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+
+        try:
+            self.cursor.execute("ALTER TABLE users ADD COLUMN tens INTEGER DEFAULT 0")
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+
+        try:
+            self.cursor.execute("ALTER TABLE users ADD COLUMN total_spark INTEGER DEFAULT 0")
+            self.conn.commit()
+        except Exception as e:
+            print(e)
+
         # Check if all users are in table
 
         id_list = [member.id for member in server.members]
