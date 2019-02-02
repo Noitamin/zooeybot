@@ -331,10 +331,13 @@ async def jail_stats(ctx, message):
             await bot.delete_message(ctx.message)
         else:
             jail_count = db_obj.get(userid, 'jail_count')
+            if jail_count == None:
+                db_obj.set('jail_count', 0)
+                jail_count = 0
             str = "{} has been sent to jail {} times.".format(mention_msg, jail_count)
             jail_last = db_obj.get(userid, 'jail_last')
             if jail_last is None:
-                jail_last = 0
+                pass
             else:
                 str += " {} was last sent to jail on {} UTC".format(
                     mention_msg, datetime.utcfromtimestamp(jail_last))
