@@ -16,6 +16,10 @@ from datetime import datetime
 import random
 import string
 import zipfile
+import inspect
+
+def lineno():
+    return inspect.currentframe().f_back.f_lineno
 
 assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
@@ -490,9 +494,9 @@ async def line(ctx, *args):
                 line_sticker_path = line_asset_path+"/"+file_list[line_sticker_number]
                 await bot.say(mention_msg)
                 await bot.send_file(channel, line_sticker_path)
-                await bot.delete_message(ctx.message)
             except:
                 await bot.say("{} LINE sticker number not found.".format(mention_msg))
+            await bot.delete_message(ctx.message)
 
         else:
             await bot.say("{} LINE sticker page not found.".format(mention_msg))
