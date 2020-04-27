@@ -125,39 +125,17 @@ async def big(ctx, message):
 
         for frame in ImageSequence.Iterator(img):
             bg.append(frame.info['background'])
-            if 'transparency' in frame.info:
-                print("transparency", frame.info['transparency'])
             disposal.append(frame.disposal_method)
-            print("disposal method", frame.disposal_method)
-            print("background", frame.info['background'])
             frame_pal = frame.getpalette()
-            shiftme = 128 - frame.info['transparency']       
-            frame = (numpy.array(frame) + shiftme) % 128  # shift data pointing into palette
+            shiftme = len(frame_pal)//3 - frame.info['transparency']       
+            frame = (numpy.array(frame) + shiftme) % (len(frame_pal)//3)  # shift data pointing into palette
             frame = Image.fromarray(frame).convert('P')
             frame.putpalette(pal[-3*shiftme:] + pal[:-3*shiftme])  # shift palette
             b = BytesIO()
             frame.save(b, format='GIF')
             frame = Image.open(b)
             frames.append(frame)
-        '''
-        while img:
-            if not img.getpalette():
-                img.putpalette(pal)
 
-            #img.size[0]//2
-            #img.size[1]//2
-
-            new_frame = Image.new('RGBA', img.size)
-            new_frame.paste(img, (0, 0), img.convert('RGBA'))
-            frames.append(new_frame) 
-
-            nframes += 1
-
-            try:
-                img.seek(nframes)
-            except EOFError:
-                break;
-        ''' 
         #basically stolen from 'intense' command's method to save frames into gif   
         frames[0].save(fp=gif_name, format='gif', save_all=True,
                        append_images=frames[1:], duration=dur, loop=0,
