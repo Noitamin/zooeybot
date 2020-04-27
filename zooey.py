@@ -129,6 +129,12 @@ async def big(ctx, message):
                 print("transparency", frame.info['transparency'])
             disposal.append(frame.disposal_method)
             print("disposal method", frame.disposal_method)
+            print("background", frame.info['background'])
+            frame_pal = frame.getpalette()
+            shiftme = 128 - frame.info['transparency']       
+            frame = (numpy.array(frame) + shiftme) % 128  # shift data pointing into palette
+            frame = Image.fromarray(frame).convert('P')
+            frame.putpalette(pal[-3*shiftme:] + pal[:-3*shiftme])  # shift palette
             b = BytesIO()
             frame.save(b, format='GIF')
             frame = Image.open(b)
@@ -156,7 +162,7 @@ async def big(ctx, message):
         frames[0].save(fp=gif_name, format='gif', save_all=True,
                        append_images=frames[1:], duration=dur, loop=0,
                        background=bg,
-                       transparency=transparent_color,
+                       transparency=0,
                        optimize=False, disposal=disposal)
 
         await bot.say(mention_msg)
