@@ -20,14 +20,12 @@ holo_dict = {
     "戌神ころね": "Korone",
     "潤羽るしあ": "Rushia",
     "夏色まつり": "Matsuri",
-    "角巻わため": "Watame"
+    "角巻わため": "Watame",
+    "常闇トワ": "Towa"
 }
 
 url = 'https://schedule.hololive.tv/lives/all'
 
-page = requests.get(url).content
-soup = BeautifulSoup(page, 'html.parser')
-live = soup.findAll('a', style=re.compile("border: 3px red solid"))
 
 class Hololive():
     def __init__(self, bot):
@@ -40,6 +38,10 @@ class Hololive():
 
     @hololive.command(pass_context=True)
     async def whomst(self, ctx):
+        page = requests.get(url).content
+        soup = BeautifulSoup(page, 'html.parser')
+        live = soup.find_all('a', style=re.compile("border: 3px red solid"))
+
         if live is not None:
             await self.bot.say("The following Vtubers are live:")
             for tuber in live:
