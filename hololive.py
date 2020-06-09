@@ -21,7 +21,9 @@ holo_dict = {
     "潤羽るしあ": "Rushia",
     "夏色まつり": "Matsuri",
     "角巻わため": "Watame",
-    "常闇トワ": "Towa"
+    "常闇トワ": "Towa",
+    "ロボ子さん": "Roboco",
+    "大神ミオ": "Mio",
 }
 
 url = 'https://schedule.hololive.tv/lives/all'
@@ -30,6 +32,15 @@ url = 'https://schedule.hololive.tv/lives/all'
 class Hololive():
     def __init__(self, bot):
         self.bot = bot
+
+    def _check_dict(self, live_soup):
+        live_dict = {}
+        for t in live_soup:
+            chan = str(t.text.replace(" ", "").replace("\n", "").replace("\r", "")).replace(":", "")
+            chan = ''.join([i for i in chan if not i.isdigit()])
+            if chan in holo_dict:
+                live_dict[chan] = "<" + t['href'] + ">"
+        return live_dict
 
     @commands.group(pass_context=True)
     async def hololive(self, ctx):
@@ -41,15 +52,12 @@ class Hololive():
         page = requests.get(url).content
         soup = BeautifulSoup(page, 'html.parser')
         live = soup.find_all('a', style=re.compile("border: 3px red solid"))
+        live_chan = self._check_dict(live)
 
-        if live is not None:
-            await self.bot.say("The following Vtubers are live:")
-            for tuber in live:
-                stream_url = "<" + tuber['href'] + ">"
-                channel = str(tuber.text.replace(" ", "").replace("\n", "").replace("\r", "")).replace(":", "")
-                channel = ''.join([i for i in channel if not i.isdigit()])
-                if channel in holo_dict:
-                    await self.bot.say(holo_dict[channel] + " " + stream_url)
+        if live is not None and len(live_chan) > 0:
+            await self.bot.say("Streaming now:")
+            for channel, stream_url in live_chan.items():
+                await self.bot.say(holo_dict[channel] + " " + stream_url)
             return
 
         else:
