@@ -39,9 +39,9 @@ async def on_ready():
     print('------')
     print('------')
     print('Performing database checks...')
-    for server in bot.servers:
-        db_obj = processDB.db('{}.db'.format(server.id))
-        db_obj.update_users(server)
+    for guild in bot.guilds:
+        db_obj = processDB.db('{}.db'.format(guild.id))
+        db_obj.update_users(guild)
 
     await bot.change_presence(game=discord.Game(name="with life"))
 
@@ -53,24 +53,24 @@ async def on_message(message):
 
     if (waaai_pattern.match(message.content)):
         if re.match('(\\\o\\\)', message.content):
-            await bot.send_file(message.channel, os.path.join(assets_path, "assets/waaai_left.jpg"))
+            await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/waaai_left.jpg")))
         else:
-            await bot.send_file(message.channel, os.path.join(assets_path, "assets/waaai.jpg"))
+            await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/waaai.jpg")))
         await bot.process_commands(message)
 
     elif (scream_pattern.match(message.content)) and rand_chance != '':
         if rand_chance == 'no':
             if message.author.id != bot.user.id: 
-                await bot.send_message(message.channel, "no.")
+                await message.channel.send("no.")
                 await bot.process_commands(message)
 
         elif rand_chance == 'birb':
-            await bot.send_file(message.channel, os.path.join(assets_path, "assets/birb_scream.jpg"))
+            await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/birb_scream.jpg")))
             await bot.process_commands(message)
 
         elif rand_chance == 'scream':
             scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 25)))
-            await bot.send_message(message.channel, scream_msg) 
+            await message.channel.send(scream_msg) 
             await bot.process_commands(message)
 
     else:
@@ -93,18 +93,18 @@ async def big(ctx, message):
 
         response = requests.get(emoji_url)
         img = Image.open(BytesIO(response.content)).convert("RGBA")
-        img_name = author_id + "_temp.png"
+        img_name = str(author_id)+ "_temp.png"
         img.save(img_name) 
 
-        await bot.say(mention_msg)
-        await bot.send_file(channel, img_name)
+        await channel.send(mention_msg)
+        await channel.send(file=discord.File(img_name))
         os.remove(img_name)
-        await bot.delete_message(ctx.message)
+        await ctx.message.delete()
 
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif" 
-        gif_name = author_id + "_temp.gif"
+        gif_name = str(author_id) + "_temp.gif"
 
         #save each frame of the gif then reconstruct it in a list
         response = requests.get(emoji_url)
@@ -143,13 +143,13 @@ async def big(ctx, message):
                        transparency=0,
                        optimize=False, disposal=disposal)
 
-        await bot.say(mention_msg)
-        await bot.send_file(channel, gif_name)
+        await channel.send(mention_msg)
+        await channel.send(file=discord.File(gif_name))
         os.remove(gif_name)
-        await bot.delete_message(ctx.message)
+        await ctx.message.delete()
 
     else:
-        await bot.say("That's not a custom emoji. Try again")
+        await channel.send("That's not a custom emoji. Try again")
 
 @bot.command(pass_context=True)
 async def intense(ctx, *args):
@@ -290,13 +290,13 @@ async def intense(ctx, *args):
                        transparency=transparent_color,
                        optimize=False, disposal=2)
 
-        await bot.say(mention_msg)
-        await bot.send_file(channel, 'temp.gif')
+        await ctx.send(mention_msg)
+        await channel.send(file=discord.File('temp.gif'))
         os.remove('temp.gif')
-        await bot.delete_message(ctx.message)
+        await ctx.message.delete()
 
     else:
-        await bot.say("That's not a custom emoji or user with an avatar. Try again")
+        await ctx.send("That's not a custom emoji or user with an avatar. Try again")
 
 @bot.command(pass_context=True)
 async def jail_stats(ctx, message):
@@ -315,8 +315,8 @@ async def jail_stats(ctx, message):
 
         # Zooey is never in jail
         if userid == int(bot.user.id):
-            await bot.say("Why would anyone want to put {} in jail?".format(mention_msg))
-            await bot.delete_message(ctx.message)
+            await ctx.send("Why would anyone want to put {} in jail?".format(mention_msg))
+            await ctx.message.delete()
         else:
             jail_count = db_obj.get(userid, 'jail_count')
             if jail_count == None:
@@ -329,8 +329,8 @@ async def jail_stats(ctx, message):
             else:
                 str += " {} was last sent to jail on {} UTC".format(
                     mention_msg, datetime.utcfromtimestamp(jail_last))
-            await bot.say(str)
-            await bot.delete_message(ctx.message)
+            await ctx.send(str)
+            await ctx.message.delete()
 
 @bot.command(pass_context=True)
 async def jail(ctx, message):
@@ -352,8 +352,8 @@ async def jail(ctx, message):
 
         # Can't put Zooey in jail
         if userid == int(bot.user.id):
-            await bot.say("{} Nice try.".format(author_mention_msg))
-            await bot.delete_message(ctx.message)
+            await ctx.send("{} Nice try.".format(author_mention_msg))
+            await ctx.message.delete()
 
         else:
 
@@ -367,28 +367,28 @@ async def jail(ctx, message):
                 if elapsed > 300:  # 5 minute timeout
                     db_obj.increment(userid, 'jail_count')
                     db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
-                    await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
+                    await ctx.send("{} sent {} to jail!".format(author_mention_msg, mention_msg))
 
                     if rand_chance == 'shotty':
                         print("im super shotty")
-                        await bot.send_file(ctx.message.channel, os.path.join(assets_path, 'assets/jail_shotty.jpg'))
+                        await channel.send(file=discord.File(os.path.join(assets_path, 'assets/jail_shotty.jpg')))
                         #await bot.process_commands(ctx.message)
-                        await bot.say("Moshi moshi, lolice desu.")
-                    await bot.delete_message(ctx.message)
+                        await ctx.send("Moshi moshi, lolice desu.")
+                    await ctx.message.delete()
 
                 else:
-                    await bot.say("{} That user is already in jail.".format(author_mention_msg))
-                    await bot.delete_message(ctx.message)
+                    await ctx.send("{} That user is already in jail.".format(author_mention_msg))
+                    await ctx.message.delete()
 
             else:
                 db_obj.set(userid, 'jail_count', 1)
                 db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
-                await bot.say("{} sent {} to jail!".format(author_mention_msg, mention_msg))
-                await bot.delete_message(ctx.message)
+                await ctx.send("{} sent {} to jail!".format(author_mention_msg, mention_msg))
+                await ctx.message.delete()
 
     else:
-        await bot.say("{} User not found.".format(author_mention_msg))
-        await bot.delete_message(ctx.message)
+        await ctx.send("{} User not found.".format(author_mention_msg))
+        await ctx.message.delete()
 
 @bot.command(pass_context=True)
 async def line(ctx, *args):
@@ -476,17 +476,17 @@ async def line(ctx, *args):
             file_list = sorted(os.listdir(line_asset_path))
             try:
                 line_sticker_path = line_asset_path+"/"+file_list[line_sticker_number]
-                await bot.say(mention_msg)
-                await bot.send_file(channel, line_sticker_path)
+                await ctx.send(mention_msg)
+                await channel.send(file=discord.File(line_sticker_path))
             except:
-                await bot.say("{} LINE sticker number not found.".format(mention_msg))
-            await bot.delete_message(ctx.message)
+                await ctx.send("{} LINE sticker number not found.".format(mention_msg))
+            await ctx.message.delete()
 
         else:
-            await bot.say("{} LINE sticker page not found.".format(mention_msg))
+            await ctx.send("{} LINE sticker page not found.".format(mention_msg))
 
     else:
-        await bot.say("{} LINE sticker page not found.".format(mention_msg))
+        await ctx.send("{} LINE sticker page not found.".format(mention_msg))
 
 if __name__ == "__main__":
     for extension in startup_extensions:
@@ -496,7 +496,5 @@ if __name__ == "__main__":
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
-
-
 
     bot.run(TOKEN)

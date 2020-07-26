@@ -9,7 +9,7 @@ Help menu class for Zooey bot
 Displays either a default help menu or more detailed menus for specific commands
 '''
 
-class HelpMenu():
+class HelpMenu(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -40,8 +40,8 @@ class HelpMenu():
                         value="`\nLearn what a deviant mentioned user is.`",
                         inline=False)
 
-        await self.bot.send_message(channel, embed=embed)
-        await self.bot.delete_message(ctx.message)
+        await ctx.send(embed=embed)
+        await ctx.message.delete()
 
 def setup(bot):
     bot.add_cog(HelpMenu(bot))
