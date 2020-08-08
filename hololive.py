@@ -10,9 +10,11 @@ from discord.ext import commands
 from bs4 import BeautifulSoup
 
 holo_dict = {
+    "アキロゼ": "Aki",
     "湊あくあ": "Aqua",
     "癒月ちょこ": "Choco",
     "桐生ココ": "Coco",
+    "不知火フレア": "Flare",
     "白上フブキ": "Fubuki",
     "赤井はあと": "Haato",
     "天音かなた": "Kanata",
@@ -24,12 +26,18 @@ holo_dict = {
     "さくらみこ": "Miko",
     "大神ミオ": "Mio",
     "白銀ノエル": "Noel",
+    "猫又おかゆ": "Okayu",
     "兎田ぺこら": "Pekora",
     "ロボ子さん": "Roboco",
     "潤羽るしあ": "Rushia",
     "大空スバル": "Subaru",
     "常闇トワ": "Towa",
     "角巻わため": "Watame",
+    "雪花ラミィ": "Lamy",
+    "桃鈴ねね": "Nene",
+    "獅白ぼたん": "Botan",
+    "魔乃アロエ": "Aloe",
+    "尾丸ポルカ": "Clownpiece",
 }
 
 url = 'https://schedule.hololive.tv/lives/hololive'
@@ -49,12 +57,12 @@ class Hololive(commands.Cog):
         return live_dict
 
     @commands.group(pass_context=True)
-    async def hololive(self, ctx):
+    async def holo(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid subcommand passed.")
 
-    @hololive.command(pass_context=True)
-    async def whomst(self, ctx):
+    @holo.command(pass_context=True)
+    async def live(self, ctx):
         page = requests.get(url).content
         soup = BeautifulSoup(page, 'html.parser')
         all_live = soup.find_all('a', style=re.compile("border: 3px red solid"))
