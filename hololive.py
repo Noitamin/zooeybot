@@ -38,9 +38,14 @@ holo_dict = {
     "獅白ぼたん": "Botan",
     "魔乃アロエ": "Aloe",
     "尾丸ポルカ": "Clownpiece",
+    "Amelia": "Amelia",
+    "Calli": "Calli",
+    "Ina": "Ina",
+    "Gura": "Gura",
+    "Kiara": "Kiara",
 }
 
-url = 'https://schedule.hololive.tv/lives/hololive'
+url = 'https://schedule.hololive.tv/lives'
 
 
 class Hololive(commands.Cog):
