@@ -6,6 +6,7 @@ import processDB
 import requests
 import time
 from discord.ext import commands
+import discord
 
 from bs4 import BeautifulSoup
 
@@ -43,6 +44,12 @@ holo_dict = {
     "Ina": "Ina",
     "Gura": "Gura",
     "Kiara": "Kiara",
+    "Ollie": "Ollie",
+    "Anya": "Anya",
+    "Reine": "Reine",
+    "Risu": "Risu",
+    "Iofi": "Iofi",
+    "Moona": "Moona",
 }
 
 url = 'https://schedule.hololive.tv/lives'
@@ -76,7 +83,14 @@ class Hololive(commands.Cog):
         if all_live is not None and len(live_chan) > 0:
             await ctx.send("Streaming now:")
             for channel, stream_url in live_chan.items():
-                await ctx.send(holo_dict[channel] + " " + stream_url)
+                if channel == "Gura":
+                    emoji = discord.utils.get(self.bot.emojis, name='a_')
+                    await ctx.send(str(emoji) + " " + stream_url)
+                elif channel == "Amelia":
+                    emoji = discord.utils.get(self.bot.emojis, name='amewat')
+                    await ctx.send(str(emoji) + " " + stream_url)
+                else:
+                    await ctx.send(holo_dict[channel] + " " + stream_url)
             return
 
         else:
