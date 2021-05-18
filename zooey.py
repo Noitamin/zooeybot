@@ -25,7 +25,7 @@ assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
 #startup_extensions = ["helpmenu"]
-startup_extensions = ["helpmenu", "sparkcalc", "hololive"]
+startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line"]
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
@@ -43,7 +43,8 @@ async def on_ready():
         db_obj = processDB.db('{}.db'.format(guild.id))
         db_obj.update_users(guild)
 
-    await bot.change_presence(game=discord.Game(name="with life"))
+    game = discord.Game("with your gacha")
+    await bot.change_presence(status=None, activity=game)
 
 @bot.event
 async def on_message(message):
@@ -389,104 +390,6 @@ async def jail(ctx, message):
     else:
         await ctx.send("{} User not found.".format(author_mention_msg))
         await ctx.message.delete()
-
-@bot.command(pass_context=True)
-async def line(ctx, *args):
-    """Post a given LINE sticker"""
-    mention_msg = "<@!{}>".format(ctx.message.author.id)
-    channel = ctx.message.channel
-    parsed_args = helpers.parse_options(args)
-
-    for item in parsed_args:
-        if item.name == "input":
-            try:
-                line_page_code = item.values[0]
-                line_sticker_number = int(item.values[1])
-            except:
-                line_page_code = -1
-                line_sticker_number = -1
-
-    if line_page_code != -1:
-
-        # Check if folder exists
-        if os.path.isdir("./assets") == False:
-            os.mkdir("./assets")
-
-        if os.path.isdir("./assets/line") == False:
-            os.mkdir("./assets/line")
-
-        line_asset_path = "./assets/line/" + line_page_code
-
-        flag_ok = 1
-
-        if os.path.isdir(line_asset_path) == False:
-            # Check if this is a real LINE sticker set
-            # Try stickerpack first
-            line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickerpack@2x.zip"
-            r = requests.get(line_zip, stream=True)
-
-            if r.ok:
-                # Download and extract to asset folder
-                # Check for animated versions first
-                os.mkdir(line_asset_path)
-                z = zipfile.ZipFile(BytesIO(r.content))
-                img_pattern = re.compile("animation@2x/\d+@2x.png")
-                flag_found = 0
-                for zip_info in z.infolist():
-                    if img_pattern.match(zip_info.filename):
-                        zip_info.filename = os.path.basename(zip_info.filename)
-                        z.extract(zip_info, line_asset_path)
-                        flag_found = 1
-                if flag_found == 1:
-                    # now convert all of these to gifs
-                    apng_list = os.listdir(line_asset_path+"")
-                    for apng in apng_list:
-                        apng_path = line_asset_path + "/" + apng
-                        helpers.APNGtoGIF(apng_path)
-                        os.remove(apng_path)
-                else:
-                    # not animated; get regular images
-                    img_pattern = re.compile("\d+@2x.png")
-                    for infile in z.namelist():
-                        if img_pattern.match(infile):
-                            z.extract(infile, line_asset_path)
-
-            else:
-                # try stickers
-                line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickers@2x.zip"
-                r = requests.get(line_zip, stream=True)
-
-                if r.ok:
-                    # Download and extract to asset folder
-                    # Skip downloading thumbnails and metadata files
-                    img_pattern = re.compile("\d+@2x.png")
-                    os.mkdir(line_asset_path)
-                    z = zipfile.ZipFile(BytesIO(r.content))
-
-                    for infile in z.namelist():
-                        if img_pattern.match(infile):
-                            z.extract(infile, line_asset_path)
-                else:
-                    flag_ok = 0
-
-        if flag_ok == 1:
-            # Post requested sticker
-            # done through image number
-            # get list of filenames
-            file_list = sorted(os.listdir(line_asset_path))
-            try:
-                line_sticker_path = line_asset_path+"/"+file_list[line_sticker_number]
-                await ctx.send(mention_msg)
-                await channel.send(file=discord.File(line_sticker_path))
-            except:
-                await ctx.send("{} LINE sticker number not found.".format(mention_msg))
-            await ctx.message.delete()
-
-        else:
-            await ctx.send("{} LINE sticker page not found.".format(mention_msg))
-
-    else:
-        await ctx.send("{} LINE sticker page not found.".format(mention_msg))
 
 if __name__ == "__main__":
     for extension in startup_extensions:
