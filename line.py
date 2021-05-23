@@ -54,6 +54,9 @@ class Line(commands.Cog):
                     await ctx.send("{} LINE API call failed.".format(mention_msg))
                 else:
                     r_content = json.loads(r.text)
+                    if r_content["totalCount"] == 0:
+                        await ctx.send("{} No sticker package found.".format(mention_msg))
+                        return
                     line_page_code = r_content["items"][0]["id"]
 
             # Check if folder exists
