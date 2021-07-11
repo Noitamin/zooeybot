@@ -79,6 +79,10 @@ async def on_message(message):
         return
 
 @bot.command(pass_context=True)
+async def rave(ctx):
+    await ctx.send(file=discord.File(os.path.join(assets_path, "assets/sirin2.gif")))
+
+@bot.command(pass_context=True)
 async def big(ctx, message):
     """Hugify a given emoji"""
     img_pattern = re.compile("\<\:.+\:\d+\>")
