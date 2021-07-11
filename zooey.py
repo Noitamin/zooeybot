@@ -80,7 +80,7 @@ async def on_message(message):
 
 @bot.command(pass_context=True)
 async def rave(ctx):
-    await ctx.send(file=discord.File(os.path.join(assets_path, "assets/sirin2.gif")))
+    await ctx.send(file=discord.File(os.path.join(assets_path, "assets/sirin_smaller.gif")))
 
 @bot.command(pass_context=True)
 async def big(ctx, message):
