@@ -50,6 +50,11 @@ holo_dict = {
     "Risu": "Risu",
     "Iofi": "Iofi",
     "Moona": "Moona",
+    "Mumei": "Mumei",
+    "Kronii": "Kronii",
+    "Sana": "Sana",
+    "Fauna": "Fauna",
+    "Baelz": "Baelz",
 }
 
 url = 'https://schedule.hololive.tv/lives'
@@ -77,7 +82,7 @@ class Hololive(commands.Cog):
     async def live(self, ctx):
         page = requests.get(url).content
         soup = BeautifulSoup(page, 'html.parser')
-        all_live = soup.find_all('a', style=re.compile("border: 3px red solid"))
+        all_live = soup.find_all('a', style=re.compile("border: 3px red"))
         live_chan = self._check_dict(all_live)
 
         if all_live is not None and len(live_chan) > 0:

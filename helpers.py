@@ -1,4 +1,3 @@
-
 from numpy import array
 import re
 from apng import APNG
