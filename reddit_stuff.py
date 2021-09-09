@@ -61,6 +61,10 @@ class RedditStuff(commands.Cog):
         while True:
             response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
 
+            if 'error' in response.json():
+                await ctx.send("cannot access sub, " + response.json()['reason'])
+                return
+
             # deal with certain subreddits that does not play nice with random
             # they return a dictionary rather than a list
             if type(response.json()) is dict:
