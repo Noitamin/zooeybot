@@ -9,6 +9,7 @@ import numpy
 import os
 from PIL import Image, ImageDraw
 from secrets import PRIVATECHANNEL
+import helpers
 
 board_width = 342
 board_height = 294
@@ -33,7 +34,6 @@ reactdict = {
     "7️⃣" : 6,
     "🏳" : 7
 }
-
 
 def find_first_nonzero_in_col(board, col):
     for r in range(6):
@@ -67,22 +67,40 @@ def check_for_victory(board,rmove,cmove):
                 return row[s]
     return 0
 
-def generate_title(players,turn):
-    title = None
-    if players[1] is None:
-        if turn == 0:
-            title = "<@!{}> vs. nobody yet; <@!{}>'s move".format(players[0].id, players[0].id)
-        else:
-            title = "<@!{}> vs. nobody yet; make a move to join!".format(players[0].id)
-    else:
-        title = "<@!{}> vs. <@!{}>; <@!{}>'s move".format(players[0].id, players[1].id, players[turn].id)
-    return title
-
 class connect_four(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     gameinprogress = False
+    isChaos = False
+    max_team_size = 1
+    lastPlayer = None
+    teams = [set(), set()]
+    turn = 0
+
+    def generate_title(self):
+        color = "Red"
+        if self.turn == 1:
+            color = "Yellow"
+        if self.isChaos is True:
+            if self.lastPlayer is None:
+                title = "Chaos mode; anyone can play! {} to move.".format(color)
+            else:
+                title = "Chaos mode; last move played by <@!{}>. {} to move.".format(self.lastPlayer.id, color)
+        else:
+            title = "{} to move".format(color)
+            if len(self.teams[self.turn]) == 0:
+                title += ". "
+            else:
+                title += " ("
+                for player in self.teams[self.turn]:
+                    title += "<@!{}>".format(player.id)
+                title += "). "
+            title += "Team size {} out of {}.".format(len(self.teams[self.turn]), self.max_team_size)
+        return title
+
+    def isPlayer(self, user):
+        return (user in self.teams[0] or user in self.teams[1])
 
     async def draw_board(self, ctx, message, board):
         # Create an image of the board state
@@ -125,29 +143,55 @@ class connect_four(commands.Cog):
             await message.edit(content=purl)
         return message
 
+    def reset(self):
+        self.gameinprogress = False
+        self.isChaos = False
+        self.max_team_size = 1
+        self.lastPlayer = None
+        self.teams = [set(), set()]
+        self.turn = 0
+
+    def isValidPlayer(self, user):
+        # user is valid in standard mode if they are the next player in turn order, or
+        # if there is no player registered next in turn order.
+        # user is valid in chaos mode if they are not the last player to act
+        if self.isChaos is True:
+            return user != self.lastPlayer
+        else:
+            return user in self.teams[self.turn]
+
     @commands.group(pass_context=True)
     async def connect_four(self, ctx, *args):
         """Start a game of Connect Four"""
         mention_msg = "<@!{}>".format(ctx.message.author.id)
         channel = ctx.message.channel
-        #parsed_args = helpers.parse_options(args)
+        parsed_args = helpers.parse_options(args)
 
         # Check if game is in progress
         if self.gameinprogress:
             await channel.send("A game is already in progress.")
             return
 
+        # Set flags for game in progress
         self.gameinprogress = True
+        for item in parsed_args:
+            if item.name == "--chaos":
+                self.isChaos = True
+            if item.name == "--teams":
+                try:
+                    self.max_team_size = max(1, int(item.values[0]))
+                except:
+                    self.max_team_size = 100
 
         # Initiate the message
         message = None
 
         # Initiate the players and turn order
-        players = [ctx.author, None]
-        turn = 0
+        self.teams = [set(), set()]
+        self.turn = 0
 
         # Initiate the title
-        title = generate_title(players,turn)
+        title = self.generate_title()
         tpost = await channel.send(title)
 
         # Initiate the board
@@ -159,48 +203,59 @@ class connect_four(commands.Cog):
         while True:
             try:
                 reaction, user = await self.bot.wait_for("reaction_add", timeout=30)
-                print(str(reaction.emoji))
-                # Check whose turn it is.
-                print(players[turn])
-                print(user)
-                print(players[turn] == user)
 
+                # Process input
                 if str(reaction.emoji) in reactions:
-                    if user in players and reactdict[str(reaction.emoji)] == 7:
-                        mention_msg = "<@!{}> surrendered.".format(user.id)
+                    if reactdict[str(reaction.emoji)] == 7 and self.isPlayer(user):
+                        # Surrender if white flag clicked and the user is part of the game
+                        if (self.isChaos is True):
+                            mention_msg = "<@!{}> surrendered. No, I don't know who wins.".format(color, user.id)
+                        else:
+                            if (user in self.teams[0]):
+                                color = "Red"
+                            else:
+                                color = "Yellow"
+                            mention_msg = "{} team surrendered (<@!{}>).".format(color, user.id)
                         await channel.send(mention_msg)
-                        self.gameinprogress = False
+                        self.reset()
                         return
-                    if players[turn] is None:
-                        players[turn] = user
-                    if players[turn] == user:
-                        # process turn
-                        c = reactdict[str(reaction.emoji)] # figure out what column to drop in
-                        r = find_first_nonzero_in_col(board, c) # figure out what row to drop on, if possible
-                        if r is not None:
-                            board[r][c] = turn + 1 # 1 for p1, 2 for p2
-                            turn = 1 - turn # vaild move; pass the turn
-                            # update title and board messages
-                            title = generate_title(players, turn)
-                            await tpost.edit(content=title)
-                            await self.draw_board(ctx, bpost, board)
-                            # check for victory
-                            v = check_for_victory(board,r,c)
-                            if v != 0:
-                                mention_msg = "<@!{}> won the game!".format(players[int(v)-1].id)
-                                await channel.send(mention_msg)
-                                self.gameinprogress = False
-                                return
+                    elif reactdict[str(reaction.emoji)] < 7:
+                        if len(self.teams[self.turn]) < self.max_team_size and user not in self.teams[1-self.turn]:
+                            self.teams[self.turn].add(user)
+                        if self.isValidPlayer(user):
+                            # process turn if valid user
+                            c = reactdict[str(reaction.emoji)] # figure out what column to drop in
+                            r = find_first_nonzero_in_col(board, c) # figure out what row to drop on, if possible
+                            if r is not None:
+                                board[r][c] = self.turn + 1 # 1 for p1, 2 for p2
+                                self.turn = 1 - self.turn # valid move; pass the turn
+                                if self.isChaos is True:
+                                    self.lastPlayer = user # in chaos mode, store the last player to move.
+                                # update title and board messages
+                                title = self.generate_title()
+                                await tpost.edit(content=title)
+                                await self.draw_board(ctx, bpost, board)
+                                # check for victory
+                                v = check_for_victory(board, r, c)
+                                if v != 0:
+                                    color = "Red"
+                                    if int(v) == 2:
+                                        color = "Yellow"
+                                    mention_msg = "{} team won the game! (".format(color)
+                                    for player in self.teams[int(v)-1]:
+                                        mention_msg += "<@!{}>".format(player.id)
+                                    mention_msg += ")"
+                                    await channel.send(mention_msg)
+                                    self.reset()
+                                    return
 
                 await bpost.remove_reaction(reaction, user)
 
             except asyncio.TimeoutError:
                 print("Timeout")
                 await channel.send("Time's up, nerds.")
-                self.gameinprogress = False
+                self.reset()
                 return
-
-
 
 def setup(bot):
     bot.add_cog(connect_four(bot))
