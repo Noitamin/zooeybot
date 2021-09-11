@@ -13,7 +13,7 @@ In Fedora
 - python3.5-dev
 - libffi-dev (required only if you're installing discord.py with voice)
 - ffmpeg (required only if you're installing discord.py with voice)
-- 
+
 After dependencies are installed, run the following   
 ```sudo python3 setup.py```
 
