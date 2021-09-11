@@ -20,5 +20,5 @@ After dependencies are installed, run the following
 Note that if you choose to install with voice you must have libffi-dev and ffmpeg installed.
 
 Create secrets.py in directory and insert:
-TOKEN = 'Your token here'
-PRIVATECHANNEL = ID of a private channel which this bot can send messages to and delete messages from
+- TOKEN = 'Your token here'
+- PRIVATECHANNEL = ID of a private channel which this bot can send messages to and delete messages from
