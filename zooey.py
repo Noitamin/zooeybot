@@ -25,7 +25,7 @@ assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
 #startup_extensions = ["helpmenu"]
-startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four"]
+startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four", "voice_player"]
 
 description = '''Zooey bot for discord shenanigans'''
 bot = commands.Bot(command_prefix='&', description=description)
