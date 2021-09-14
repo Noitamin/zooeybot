@@ -24,7 +24,7 @@ class RedditStuff(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    self.override = None
+    override = None
 
     @commands.group(pass_context=True)
     async def pls(self, ctx, *args):
@@ -43,7 +43,7 @@ class RedditStuff(commands.Cog):
             elif item.name == "--new":
                 self.override = "new"
             elif item.name == "--top":
-                self.override == "top"
+                self.override = "top"
 
 
         # obtain token for oauth requests
@@ -77,7 +77,7 @@ class RedditStuff(commands.Cog):
                     response = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
                     need_request = False
                 elif self.override == "top":
-                    response = requests.get(obase_url + '/r/' + subreddit + '/top', headers=headers)
+                    response = requests.get(obase_url + '/r/' + subreddit + '/top.json?t=all', headers=headers)
                     need_request = False
                 else:
                     response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
@@ -96,7 +96,8 @@ class RedditStuff(commands.Cog):
             else:
                 submission = response.json()[0]['data']['children'][0]
 
-            if 'url_overridden_by_dest' in submission['data'].keys() and submission['data']['over_18'] is False and 'gallery' not in submission['data']['url_overridden_by_dest']:
+            if 'url_overridden_by_dest' in submission['data'].keys() and submission['data']['over_18'] is False and 'gallery' not in submission['data']['url_overridden_by_dest'] \
+                and submission['data']['is_video'] is False:
                 break
 
             cap += 1

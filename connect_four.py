@@ -198,7 +198,7 @@ class connect_four(commands.Cog):
         board = numpy.zeros((6, 7))
         bpost = await self.draw_board(ctx, message, board)
 
-        await ctx.message.delete()
+        #await ctx.message.delete()
 
         while True:
             try:
@@ -249,7 +249,7 @@ class connect_four(commands.Cog):
                                     self.reset()
                                     return
 
-                await bpost.remove_reaction(reaction, user)
+                #await bpost.remove_reaction(reaction, user)
 
             except asyncio.TimeoutError:
                 print("Timeout")
