@@ -24,6 +24,8 @@ class RedditStuff(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    override = None
+
     @commands.group(pass_context=True)
     async def pls(self, ctx, *args):
         channel = ctx.message.channel
@@ -35,7 +37,14 @@ class RedditStuff(commands.Cog):
         
         for item in parsed_args: 
             if item.name == "input":
-                subreddit= item.values[0]
+                subreddit = item.values[0]
+            elif item.name == "--hot":
+                self.override = "hot"
+            elif item.name == "--new":
+                self.override = "new"
+            elif item.name == "--top":
+                self.override = "top"
+
 
         # obtain token for oauth requests
         r = requests.post(base_url + 'api/v1/access_token',
@@ -55,11 +64,25 @@ class RedditStuff(commands.Cog):
 
         # make a post request to grab a random post from given 'subreddit'
         cap = 0
+        need_request = True  # If a dict is returned from request, set to False and reuse the dict
 
         # only look for posts with url links and sfw
         # maximum of 10 tries before giving up
         while True:
-            response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
+            if need_request is True:
+                if self.override == "hot" :
+                    response = requests.get(obase_url + '/r/' + subreddit + '/hot', headers=headers)
+                    need_request = False
+                elif self.override == "new":
+                    response = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
+                    need_request = False
+                elif self.override == "top":
+                    response = requests.get(obase_url + '/r/' + subreddit + '/top.json?t=all', headers=headers)
+                    need_request = False
+                else:
+                    response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
+                    if type(response.json()) is dict:
+                        need_request = False
 
             if 'error' in response.json():
                 await ctx.send("cannot access sub, " + response.json()['reason'])
@@ -67,12 +90,14 @@ class RedditStuff(commands.Cog):
 
             # deal with certain subreddits that does not play nice with random
             # they return a dictionary rather than a list
+            # additionally deals with the override flags as they will return a dict
             if type(response.json()) is dict:
                 submission = random.choice(response.json()['data']['children'])
             else:
                 submission = response.json()[0]['data']['children'][0]
 
-            if 'url_overridden_by_dest' in submission['data'].keys() and submission['data']['over_18'] is False and 'gallery' not in submission['data']['url_overridden_by_dest']:
+            if 'url_overridden_by_dest' in submission['data'].keys() and submission['data']['over_18'] is False and 'gallery' not in submission['data']['url_overridden_by_dest'] \
+                and submission['data']['is_video'] is False:
                 break
 
             cap += 1
