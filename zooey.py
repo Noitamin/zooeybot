@@ -48,6 +48,8 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    if message.author.bot:
+        return
     scream_pattern = re.compile("^[aA]{4,}$")
     waaai_pattern = re.compile('(\\\o\\\)|(/o/)')
     rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
@@ -73,7 +75,10 @@ async def on_message(message):
             scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 25)))
             await message.channel.send(scream_msg) 
             await bot.process_commands(message)
-
+    elif 'same' in message.content:
+        if random.randint(0, 3) == 2:
+            await message.channel.send("same")
+            await bot.process_commands(message)
     else:
         await bot.process_commands(message)
         return
