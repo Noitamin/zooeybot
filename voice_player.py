@@ -4,6 +4,9 @@ import discord.ext
 from discord.ext import commands
 import discord
 import helpers
+import os
+
+assets_path = os.path.dirname(os.path.abspath(__file__))
 
 clips = {
     "pekoshit": "assets/pekora-horee-shiit.mp3",
@@ -38,7 +41,8 @@ class voice_player(commands.Cog):
 
         if vc is not None:
             # Initiate player and play clip
-            player = discord.FFmpegPCMAudio(source=sourcefile)
+            source_abs_path = os.path.join(assets_path, sourcefile)
+            player = discord.FFmpegPCMAudio(source=source_abs_path)
             vc.play(player)
             # Wait until clip is done playing, then leave vc
             while vc.is_playing():
