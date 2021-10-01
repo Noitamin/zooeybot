@@ -16,6 +16,7 @@ clips = {
     "ray": "assets/gamma-ray.mp3",
     "ree": "assets/REEEEEE_Nijisanji_EN.mp3",
     "reee": "assets/watson_reeeeeee.mp3",
+    "geddan": "assets/geddan.mp3",
 }
 
 class voice_player(commands.Cog):

@@ -83,6 +83,7 @@ class RedditStuff(commands.Cog):
                     response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
                     if type(response.json()) is dict:
                         need_request = False
+                self.override = None
 
             if 'error' in response.json():
                 await ctx.send("cannot access sub, " + response.json()['reason'])
@@ -96,8 +97,11 @@ class RedditStuff(commands.Cog):
             else:
                 submission = response.json()[0]['data']['children'][0]
 
-            if 'url_overridden_by_dest' in submission['data'].keys() and submission['data']['over_18'] is False and 'gallery' not in submission['data']['url_overridden_by_dest'] \
-                and submission['data']['is_video'] is False:
+            if 'url_overridden_by_dest' in submission['data'].keys() \
+                and submission['data']['over_18'] is False \
+                and 'gallery' not in submission['data']['url_overridden_by_dest'] \
+                and submission['data']['is_video'] is False \
+                and 'crosspost_parent_list' not in submission['data'].keys():
                 break
 
             cap += 1
