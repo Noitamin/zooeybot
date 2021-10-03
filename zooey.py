@@ -400,6 +400,12 @@ async def jail(ctx, message):
         await ctx.send("{} User not found.".format(author_mention_msg))
         await ctx.message.delete()
 
+@bot.command(pass_context=True)
+async def reload_cogs(ctx):
+    for ext in startup_extensions:
+        bot.reload_extension(extension)
+    await ctx.send("Cogs reloaded.")
+
 if __name__ == "__main__":
     for extension in startup_extensions:
         print('Loading cogs')
