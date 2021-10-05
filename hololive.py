@@ -44,6 +44,7 @@ holo_dict = {
     "Ina": "Ina",
     "Gura": "Gura",
     "Kiara": "Kiara",
+    "Irys": "Irys",
     "Ollie": "Ollie",
     "Anya": "Anya",
     "Reine": "Reine",
