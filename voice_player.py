@@ -5,23 +5,17 @@ from discord.ext import commands
 import discord
 import helpers
 import os
+import json
 
 assets_path = os.path.dirname(os.path.abspath(__file__))
-
-clips = {
-    "pekoshit": "assets/pekora-horee-shiit.mp3",
-    "pardun": "assets/usada-pekora-pardun.mp3",
-    "yabe": "assets/shirakami-fubuki-yabe.mp3",
-    "idc": "assets/i-don-t-care-i-m-pomu.mp3",
-    "ray": "assets/gamma-ray.mp3",
-    "ree": "assets/REEEEEE_Nijisanji_EN.mp3",
-    "reee": "assets/watson_reeeeeee.mp3",
-    "geddan": "assets/geddan.mp3",
-}
+json_path = "jsons/clips.json"
 
 class voice_player(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        f = open(os.path.join(assets_path, json_path),)
+        self.clips = json.load(f)
+        f.close()
 
     async def join_ctx(self, ctx):
         v = ctx.message.author.voice
@@ -57,7 +51,7 @@ class voice_player(commands.Cog):
         for item in parsed_args:
             if item.name == "input":
                 try:
-                    clip = clips[item.values[0]]
+                    clip = self.clips[item.values[0]]
                 except:
                     print("Invalid clip name")
                     return
