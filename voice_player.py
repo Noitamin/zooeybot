@@ -6,6 +6,7 @@ import discord
 import helpers
 import os
 import json
+import random
 
 assets_path = os.path.dirname(os.path.abspath(__file__))
 json_path = "jsons/clips.json"
@@ -51,7 +52,7 @@ class voice_player(commands.Cog):
         for item in parsed_args:
             if item.name == "input":
                 try:
-                    clip = self.clips[item.values[0]]
+                    clip = random.choice(self.clips[item.values[0]])
                 except:
                     print("Invalid clip name")
                     return
