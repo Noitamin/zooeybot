@@ -1,11 +1,12 @@
 {
-    "pekoshit": ["assets/pekora-horee-shiit.mp3"],
-    "pardun": ["assets/usada-pekora-pardun.mp3"],
-    "yabe": ["assets/shirakami-fubuki-yabe.mp3"],
-    "idc": ["assets/i-don-t-care-i-m-pomu.mp3"],
-    "ray": ["assets/gamma-ray.mp3"],
-    "ree": ["assets/REEEEEE_Nijisanji_EN.mp3","assets/watson_reeeeeee.mp3"],
-    "geddan": ["assets/geddan.mp3"],
-    "nut" : ["assets/elira_nut.mp3"]
+    "pekoshit": ["assets/mp3/pekora-horee-shiit.mp3"],
+    "pardun": ["assets/mp3/usada-pekora-pardun.mp3"],
+    "yabe": ["assets/mp3/shirakami-fubuki-yabe.mp3"],
+    "idc": ["assets/mp3/i-don-t-care-i-m-pomu.mp3"],
+    "ray": ["assets/mp3/gamma-ray.mp3"],
+    "ree": ["assets/mp3/REEEEEE_Nijisanji_EN.mp3","assets/mp3/watson_reeeeeee.mp3"],
+    "geddan": ["assets/mp3/geddan.mp3"],
+    "nut" : ["assets/mp3/elira_nut.mp3"],
+    "stj" : ["assets/mp3/shin_takara_jima_in.mp3"] 
 }
 
