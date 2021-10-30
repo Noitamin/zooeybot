@@ -402,7 +402,7 @@ async def jail(ctx, message):
 
 @bot.command(pass_context=True)
 async def reload_cogs(ctx):
-    for ext in startup_extensions:
+    for extension in startup_extensions:
         bot.reload_extension(extension)
     await ctx.send("Cogs reloaded.")
 
