@@ -50,6 +50,9 @@ class RedditStuff(commands.Cog):
         r = requests.post(base_url + 'api/v1/access_token',
                           data=data, headers={'user-agent': 'zooeybot by decrypto'},
                           auth=auth)
+        if r.status_code != 200:
+            await ctx.send("Error: Status " + str(r.status_code))
+            return
         d = r.json()
 
         token = 'bearer ' + d['access_token']
