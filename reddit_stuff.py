@@ -8,11 +8,21 @@ from discord.ext import commands
 import discord
 import helpers
 import random
+from random import choice
+from tweepy import Client, OAuth1UserHandler
 
+# Reddit secrets
 from secrets import CLIENT_ID
 from secrets import SECRET_TOKEN
 from secrets import USERNAME
 from secrets import PASSWORD
+
+# Twitter secrets
+from secrets import CONSUMER_KEY
+from secrets import CONSUMER_SECRET
+from secrets import ACCESS_TOKEN
+from secrets import ACCESS_TOKEN_SECRET
+from secrets import BEARER_TOKEN
 
 base_url = 'https://www.reddit.com/'
 obase_url = 'https://oauth.reddit.com'
@@ -20,11 +30,37 @@ data = {'grant_type': 'password', 'username': USERNAME, 'password': PASSWORD}
 auth = requests.auth.HTTPBasicAuth(CLIENT_ID, SECRET_TOKEN)
 embed_links = ['imgur', '.jpg', '.png', 'i.redd.it']
 
+
 class RedditStuff(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     override = None
+
+    def twitter_search(self, tag):
+        client = Client(bearer_token=BEARER_TOKEN,
+                        consumer_key=CONSUMER_KEY,
+                        consumer_secret=CONSUMER_SECRET,
+                        access_token=ACCESS_TOKEN,
+                        access_token_secret=ACCESS_TOKEN_SECRET)
+
+        auth = OAuth1UserHandler(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+
+        max_res = 100
+        query = "{tag} -is:retweet has:images OR {tag} -is:retweet has:videos".format(tag=tag)
+        tweets = client.search_recent_tweets(query=query,
+                                             expansions='author_id',
+                                             max_results=max_res)
+
+        if tweets.meta['result_count'] == 0:
+            return "Could not find any results"
+
+        choice_result = choice(range(0, tweets.meta['result_count']))
+        tweet_id = tweets.data[choice_result].id
+        tweet_username = client.get_user(id=tweets.data[choice_result].author_id, user_auth=auth).data.username
+        tweet_url = "https://twitter.com/{tweet_username}/status/{tweet_id}".format(tweet_username=tweet_username, tweet_id=tweet_id)
+        return tweet_url
+
 
     @commands.group(pass_context=True)
     async def pls(self, ctx, *args):
@@ -34,6 +70,7 @@ class RedditStuff(commands.Cog):
         if len(parsed_args) < 1:
             await ctx.send("Please provide a subreddit name")
             return
+
         
         for item in parsed_args: 
             if item.name == "input":
@@ -45,6 +82,9 @@ class RedditStuff(commands.Cog):
             elif item.name == "--top":
                 self.override = "top"
 
+        if subreddit.startswith('#'):
+            await ctx.send(self.twitter_search(subreddit))
+            return
 
         # obtain token for oauth requests
         r = requests.post(base_url + 'api/v1/access_token',
@@ -119,12 +159,13 @@ class RedditStuff(commands.Cog):
         res_title = submission['data']['title']
         res_ups = submission['data']['ups']
         user = ctx.message.author.name
+        print(res_url)
 
         # format response into an embed message
         embed = discord.Embed(title=res_title, url=res_permalink)
         embed.set_footer(text=user + " | " + str(res_ups) + " upvotes")
         if any(link in res_url for link in embed_links):
-            if 'imgur' in res_url and ('.jpg' not in res_url or '.png' not in res_url): 
+            if 'imgur' in res_url and ('.jpg' not in res_url and '.png' not in res_url):
                 res_url = res_url + ".jpg"
             embed.set_image(url=res_url)
             await ctx.send(embed=embed)
