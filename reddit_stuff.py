@@ -27,31 +27,30 @@ from secrets import BEARER_TOKEN
 base_url = 'https://www.reddit.com/'
 obase_url = 'https://oauth.reddit.com'
 data = {'grant_type': 'password', 'username': USERNAME, 'password': PASSWORD}
-auth = requests.auth.HTTPBasicAuth(CLIENT_ID, SECRET_TOKEN)
 embed_links = ['imgur', '.jpg', '.png', 'i.redd.it']
 
 
 class RedditStuff(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.twi_client = Client(bearer_token=BEARER_TOKEN,
+                                 consumer_key=CONSUMER_KEY,
+                                 consumer_secret=CONSUMER_SECRET,
+                                 access_token=ACCESS_TOKEN,
+                                 access_token_secret=ACCESS_TOKEN_SECRET)
+        self.twi_auth = OAuth1UserHandler(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+
+        self.reddit_auth = requests.auth.HTTPBasicAuth(CLIENT_ID, SECRET_TOKEN)
 
     override = None
 
-
     def twitter_search(self, tag):
-        client = Client(bearer_token=BEARER_TOKEN,
-                        consumer_key=CONSUMER_KEY,
-                        consumer_secret=CONSUMER_SECRET,
-                        access_token=ACCESS_TOKEN,
-                        access_token_secret=ACCESS_TOKEN_SECRET)
-
-        auth = OAuth1UserHandler(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
         max_res = 100
         if tag.startswith('@'):
             tweet_username = tag[1:]
-            user_id = client.get_user(username=tweet_username)
-            tweets = client.get_users_tweets(id=user_id.data.id, max_results=max_res, tweet_fields=['referenced_tweets'])
+            user_id = self.twi_client.get_user(username=tweet_username)
+            tweets = self.twi_client.get_users_tweets(id=user_id.data.id, max_results=max_res, tweet_fields=['referenced_tweets'])
 
             if tweets.meta['result_count'] == 0:
                 return "Could not find any results"
@@ -69,13 +68,13 @@ class RedditStuff(commands.Cog):
                 tweet_id = tweet_data['id']
         else:
             query = "{tag} -is:retweet has:images OR {tag} -is:retweet has:videos".format(tag=tag)
-            tweets = client.search_recent_tweets(query=query,
+            tweets = self.twi_client.search_recent_tweets(query=query,
                                                  expansions='author_id',
                                                  max_results=max_res)
             if tweets.meta['result_count'] == 0:
                 return "Could not find any results"
             choice_result = choice(range(0, tweets.meta['result_count']))
-            tweet_username = client.get_user(id=tweets.data[choice_result].author_id, user_auth=auth).data.username
+            tweet_username = self.twi_client.get_user(id=tweets.data[choice_result].author_id, user_auth=self.twi_auth).data.username
             tweet_id = tweets.data[choice_result].id
 
 
@@ -110,7 +109,7 @@ class RedditStuff(commands.Cog):
         # obtain token for oauth requests
         r = requests.post(base_url + 'api/v1/access_token',
                           data=data, headers={'user-agent': 'zooeybot by decrypto'},
-                          auth=auth)
+                          auth=self.reddit_auth)
         if r.status_code != 200:
             await ctx.send("Error: Status " + str(r.status_code))
             return
