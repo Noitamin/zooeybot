@@ -37,6 +37,7 @@ class RedditStuff(commands.Cog):
 
     override = None
 
+
     def twitter_search(self, tag):
         client = Client(bearer_token=BEARER_TOKEN,
                         consumer_key=CONSUMER_KEY,
@@ -47,18 +48,38 @@ class RedditStuff(commands.Cog):
         auth = OAuth1UserHandler(CONSUMER_KEY, CONSUMER_SECRET, ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
         max_res = 100
-        query = "{tag} -is:retweet has:images OR {tag} -is:retweet has:videos".format(tag=tag)
-        tweets = client.search_recent_tweets(query=query,
-                                             expansions='author_id',
-                                             max_results=max_res)
+        if tag.startswith('@'):
+            tweet_username = tag[1:]
+            user_id = client.get_user(username=tweet_username)
+            tweets = client.get_users_tweets(id=user_id.data.id, max_results=max_res, tweet_fields=['referenced_tweets'])
 
-        if tweets.meta['result_count'] == 0:
-            return "Could not find any results"
+            if tweets.meta['result_count'] == 0:
+                return "Could not find any results"
+            choice_result = choice(range(0, tweets.meta['result_count']))
 
-        choice_result = choice(range(0, tweets.meta['result_count']))
-        tweet_id = tweets.data[choice_result].id
-        tweet_username = client.get_user(id=tweets.data[choice_result].author_id, user_auth=auth).data.username
-        tweet_url = "https://twitter.com/{tweet_username}/status/{tweet_id}".format(tweet_username=tweet_username, tweet_id=tweet_id)
+            # If tweet is a retweet (starts with "RT ")
+            # then extract the user in the retweet
+            tweet_data= tweets.data[choice_result]
+            if tweet_data.text.startswith("RT "):
+                match = re.search('@.*?[^:]+', tweet_data.text)
+                if match is not None:
+                    tweet_username = match.group(0)[1:]
+                tweet_id = tweet_data['referenced_tweets'][0]['id']
+            else:
+                tweet_id = tweet_data['id']
+        else:
+            query = "{tag} -is:retweet has:images OR {tag} -is:retweet has:videos".format(tag=tag)
+            tweets = client.search_recent_tweets(query=query,
+                                                 expansions='author_id',
+                                                 max_results=max_res)
+            if tweets.meta['result_count'] == 0:
+                return "Could not find any results"
+            choice_result = choice(range(0, tweets.meta['result_count']))
+            tweet_username = client.get_user(id=tweets.data[choice_result].author_id, user_auth=auth).data.username
+            tweet_id = tweets.data[choice_result].id
+
+
+        tweet_url = "https://twitter.com/{tweet_username}/status/{tweet_id}/?e".format(tweet_username=tweet_username, tweet_id=tweet_id)
         return tweet_url
 
 
@@ -83,7 +104,7 @@ class RedditStuff(commands.Cog):
                 self.override = "top"
 
         if subreddit.startswith('#'):
-            await ctx.send(self.twitter_search(subreddit))
+            await ctx.send(self.twitter_search(subreddit[1:]))
             return
 
         # obtain token for oauth requests
