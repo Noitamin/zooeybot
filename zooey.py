@@ -95,7 +95,7 @@ async def big(ctx, message):
 
     mention_msg = "<@!{}>".format(ctx.message.author.id)
     author_id = ctx.message.author.id
-    channel = ctx.message.channel
+    #channel = ctx.message.channel
 
     if (img_pattern.match(message)):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
@@ -106,10 +106,9 @@ async def big(ctx, message):
         img_name = str(author_id)+ "_temp.png"
         img.save(img_name) 
 
-        await channel.send(mention_msg)
-        await channel.send(file=discord.File(img_name))
+        await ctx.send(mention_msg)
+        await ctx.send(file=discord.File(img_name))
         os.remove(img_name)
-        await ctx.message.delete()
 
     elif (gif_pattern.match(message)):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
@@ -149,17 +148,16 @@ async def big(ctx, message):
         #basically stolen from 'intense' command's method to save frames into gif   
         frames[0].save(fp=gif_name, format='gif', save_all=True,
                        append_images=frames[1:], duration=dur, loop=0,
-                       background=bg,
+                       background=transparent_color,
                        transparency=0,
                        optimize=False, disposal=disposal)
 
-        await channel.send(mention_msg)
-        await channel.send(file=discord.File(gif_name))
+        await ctx.send(mention_msg)
+        await ctx.send(file=discord.File(gif_name))
         os.remove(gif_name)
-        await ctx.message.delete()
 
     else:
-        await channel.send("That's not a custom emoji. Try again")
+        await ctx.send("That's not a custom emoji. Try again")
 
 @bot.command(pass_context=True)
 async def intense(ctx, *args):
@@ -301,9 +299,8 @@ async def intense(ctx, *args):
                        optimize=False, disposal=2)
 
         await ctx.send(mention_msg)
-        await channel.send(file=discord.File('temp.gif'))
+        await ctx.send(file=discord.File('temp.gif'))
         os.remove('temp.gif')
-        await ctx.message.delete()
 
     else:
         await ctx.send("That's not a custom emoji or user with an avatar. Try again")
@@ -326,7 +323,6 @@ async def jail_stats(ctx, message):
         # Zooey is never in jail
         if userid == int(bot.user.id):
             await ctx.send("Why would anyone want to put {} in jail?".format(mention_msg))
-            await ctx.message.delete()
         else:
             jail_count = db_obj.get(userid, 'jail_count')
             if jail_count == None:
@@ -340,7 +336,6 @@ async def jail_stats(ctx, message):
                 str += " {} was last sent to jail on {} UTC".format(
                     mention_msg, datetime.utcfromtimestamp(jail_last))
             await ctx.send(str)
-            await ctx.message.delete()
 
 @bot.command(pass_context=True)
 async def jail(ctx, message):
@@ -363,7 +358,6 @@ async def jail(ctx, message):
         # Can't put Zooey in jail
         if userid == int(bot.user.id):
             await ctx.send("{} Nice try.".format(author_mention_msg))
-            await ctx.message.delete()
 
         else:
 
@@ -381,24 +375,20 @@ async def jail(ctx, message):
 
                     if rand_chance == 'shotty':
                         print("im super shotty")
-                        await channel.send(file=discord.File(os.path.join(assets_path, 'assets/jail_shotty.jpg')))
+                        await ctx.send(file=discord.File(os.path.join(assets_path, 'assets/jail_shotty.jpg')))
                         #await bot.process_commands(ctx.message)
                         await ctx.send("Moshi moshi, lolice desu.")
-                    await ctx.message.delete()
 
                 else:
                     await ctx.send("{} That user is already in jail.".format(author_mention_msg))
-                    await ctx.message.delete()
 
             else:
                 db_obj.set(userid, 'jail_count', 1)
                 db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
                 await ctx.send("{} sent {} to jail!".format(author_mention_msg, mention_msg))
-                await ctx.message.delete()
 
     else:
         await ctx.send("{} User not found.".format(author_mention_msg))
-        await ctx.message.delete()
 
 @bot.command(pass_context=True)
 async def reload_cogs(ctx):

@@ -42,10 +42,8 @@ class RedditStuff(commands.Cog):
 
         self.reddit_auth = requests.auth.HTTPBasicAuth(CLIENT_ID, SECRET_TOKEN)
 
-    override = None
 
     def twitter_search(self, tag):
-
         max_res = 100
         if tag.startswith('@'):
             tweet_username = tag[1:]
@@ -81,29 +79,42 @@ class RedditStuff(commands.Cog):
         tweet_url = "https://twitter.com/{tweet_username}/status/{tweet_id}/?e".format(tweet_username=tweet_username, tweet_id=tweet_id)
         return tweet_url
 
+    @commands.group(pass_context=True)
+    async def plst(self, ctx, *args):
+        parsed_args = helpers.parse_options(args)
+
+        if len(parsed_args) < 1:
+            await ctx.send("Please provide a query to search")
+            return
+
+        for item in parsed_args:
+            if item.name == "input":
+                query = item.values[0]
+
+        await ctx.send(self.twitter_search(query))
+        return
 
     @commands.group(pass_context=True)
     async def pls(self, ctx, *args):
-        channel = ctx.message.channel
         parsed_args = helpers.parse_options(args)
+        override = None
 
         if len(parsed_args) < 1:
             await ctx.send("Please provide a subreddit name")
             return
-
         
         for item in parsed_args: 
             if item.name == "input":
                 subreddit = item.values[0]
             elif item.name == "--hot":
-                self.override = "hot"
+                override = "hot"
             elif item.name == "--new":
-                self.override = "new"
+                override = "new"
             elif item.name == "--top":
-                self.override = "top"
+                override = "top"
 
-        if subreddit.startswith('#'):
-            await ctx.send(self.twitter_search(subreddit[1:]))
+        if subreddit.startswith('#') or subreddit.startswith('@'):
+            await ctx.send(self.twitter_search(subreddit))
             return
 
         # obtain token for oauth requests
@@ -133,20 +144,20 @@ class RedditStuff(commands.Cog):
         # maximum of 10 tries before giving up
         while True:
             if need_request is True:
-                if self.override == "hot" :
+                if override == "hot" :
                     response = requests.get(obase_url + '/r/' + subreddit + '/hot', headers=headers)
                     need_request = False
-                elif self.override == "new":
-                    response = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
+                elif override == "new":
+                    nse = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
                     need_request = False
-                elif self.override == "top":
+                elif override == "top":
                     response = requests.get(obase_url + '/r/' + subreddit + '/top.json?t=all', headers=headers)
                     need_request = False
                 else:
                     response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
                     if type(response.json()) is dict:
                         need_request = False
-                self.override = None
+                override = None
 
             if 'error' in response.json():
                 await ctx.send("cannot access sub, " + response.json()['reason'])
