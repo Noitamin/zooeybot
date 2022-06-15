@@ -148,7 +148,7 @@ class RedditStuff(commands.Cog):
                     response = requests.get(obase_url + '/r/' + subreddit + '/hot', headers=headers)
                     need_request = False
                 elif override == "new":
-                    nse = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
+                    response = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
                     need_request = False
                 elif override == "top":
                     response = requests.get(obase_url + '/r/' + subreddit + '/top.json?t=all', headers=headers)
