@@ -28,7 +28,8 @@ print(assets_path)
 startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four", "voice_player"]
 
 description = '''Zooey bot for discord shenanigans'''
-bot = commands.Bot(command_prefix='&', description=description)
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix='&', description=description, intents=intents)
 bot.remove_command('help')
 
 @bot.event
