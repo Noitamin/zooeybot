@@ -26,6 +26,7 @@ print(assets_path)
 
 #startup_extensions = ["helpmenu"]
 startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four", "voice_player"]
+message_id_cache = {}
 
 description = '''Zooey bot for discord shenanigans'''
 intents = discord.Intents.default()
@@ -50,6 +51,16 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if message.author.bot:
+        # store own most recent messages, done here to avoid replicating for every ctx.send()
+        if message.author == bot.user
+            # one message cache per channel, make sure it exists
+            if message.channel not in message_cache
+                message_id_cache[message.channel] = []
+            # store the message id only
+            message_id_cache[message.channel].insert(0, message.id)
+            # limit the number of messages in cache
+            if (len(message_id_cache[message.channel]) > 10):
+                message_id_cache[message.channel].pop()
         return
     scream_pattern = re.compile("^[aA]{4,}$")
     waaai_pattern = re.compile('(\\\o\\\)|(/o/)')
@@ -83,6 +94,14 @@ async def on_message(message):
     else:
         await bot.process_commands(message)
         return
+    
+@bot.command(pass_context=True)
+async def bonk(ctx):
+    # delete the most recent message cached
+    this_channel = ctx.channel
+    message_id = message_id_cache[this_channel].pop(0)
+    message_to_delete = await this_channel.fetch_message(message_id)
+    await message_to_delete.delete()
 
 @bot.command(pass_context=True)
 async def rave(ctx):
