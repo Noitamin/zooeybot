@@ -99,6 +99,9 @@ async def on_message(message):
 async def bonk(ctx):
     # delete the most recent message cached
     this_channel = ctx.channel
+    if ((this_channel not in message_id_cache) or (len(message_id_cache[this_channel]) < 1)):
+        await ctx.send("Nothing to bonk in this channel.")
+        return
     message_id = message_id_cache[this_channel].pop(0)
     message_to_delete = await this_channel.fetch_message(message_id)
     await message_to_delete.delete()
