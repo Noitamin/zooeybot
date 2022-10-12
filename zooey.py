@@ -52,9 +52,9 @@ async def on_ready():
 async def on_message(message):
     if message.author.bot:
         # store own most recent messages, done here to avoid replicating for every ctx.send()
-        if message.author == bot.user
+        if message.author.id == bot.user.id:
             # one message cache per channel, make sure it exists
-            if message.channel not in message_cache
+            if message.channel not in message_id_cache:
                 message_id_cache[message.channel] = []
             # store the message id only
             message_id_cache[message.channel].insert(0, message.id)
