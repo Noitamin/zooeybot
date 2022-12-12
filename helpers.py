@@ -136,5 +136,3 @@ def APNGtoGIF( apng_path ):
                                   transparency=transparent_color,
                                   optimize=False, disposal=2)
 
-
-

@@ -66,6 +66,6 @@ class SparkCalc(commands.Cog):
         await ctx.send("{}, Your spark progress:{}{}".format(author_mention_msg, progress_msg, next_spark_msg))
 
 
-def setup(bot):
-    bot.add_cog(SparkCalc(bot))
+async def setup(bot):
+    await bot.add_cog(SparkCalc(bot))
 

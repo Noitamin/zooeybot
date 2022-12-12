@@ -257,6 +257,6 @@ class connect_four(commands.Cog):
                 self.reset()
                 return
 
-def setup(bot):
-    bot.add_cog(connect_four(bot))
+async def setup(bot):
+    await bot.add_cog(connect_four(bot))
 

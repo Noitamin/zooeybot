@@ -83,6 +83,6 @@ class voice_player(commands.Cog):
             else:
                 await self.join_play_leave(ctx, clip)
 
-def setup(bot):
-    bot.add_cog(voice_player(bot))
+async def setup(bot):
+    await bot.add_cog(voice_player(bot))
 

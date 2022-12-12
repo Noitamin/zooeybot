@@ -17,6 +17,7 @@ import random
 import string
 import zipfile
 import inspect
+import asyncio
 
 def lineno():
     return inspect.currentframe().f_back.f_lineno
@@ -29,7 +30,7 @@ startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff
 message_id_cache = {}
 
 description = '''Zooey bot for discord shenanigans'''
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 bot = commands.Bot(command_prefix='&', description=description, intents=intents)
 bot.remove_command('help')
 
@@ -416,16 +417,19 @@ async def jail(ctx, message):
 @bot.command(pass_context=True)
 async def reload_cogs(ctx):
     for extension in startup_extensions:
-        bot.reload_extension(extension)
+        await bot.reload_extension(extension)
     await ctx.send("Cogs reloaded.")
 
-if __name__ == "__main__":
+
+async def main():
     for extension in startup_extensions:
         print('Loading cogs')
         try:
-            bot.load_extension(extension)
+            await bot.load_extension(extension)
         except Exception as e:
             exc = '{}: {}'.format(type(e).__name__, e)
             print('Failed to load extension {}\n{}'.format(extension, exc))
+    await bot.start(TOKEN)
 
-    bot.run(TOKEN)
+if __name__ == "__main__":
+    asyncio.get_event_loop().run_until_complete(main())

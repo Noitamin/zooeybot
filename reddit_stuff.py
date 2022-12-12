@@ -205,6 +205,6 @@ class RedditStuff(commands.Cog):
             await ctx.send(res_url)
 
     
-def setup(bot):
-    bot.add_cog(RedditStuff(bot))
+async def setup(bot):
+    await bot.add_cog(RedditStuff(bot))
 

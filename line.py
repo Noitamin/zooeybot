@@ -174,6 +174,6 @@ class Line(commands.Cog):
             await ctx.send("Nobody is live, peko.")
             return
 """
-def setup(bot):
-    bot.add_cog(Line(bot))
+async def setup(bot):
+    await bot.add_cog(Line(bot))
 

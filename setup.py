@@ -1,4 +1,3 @@
-
 import pip
 import sys
 # Automatically install dependencies when run
@@ -16,3 +15,4 @@ pip.main(["install", "requests"])
 pip.main(["install", "pillow==5.0"])
 pip.main(["install", "imageio"])
 pip.main(["install", "apng"])
+pip.main(["install", "tweepy"])

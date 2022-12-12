@@ -50,5 +50,5 @@ class HelpMenu(commands.Cog):
         await ctx.send(embed=embed)
         await ctx.message.delete()
 
-def setup(bot):
-    bot.add_cog(HelpMenu(bot))
+async def setup(bot):
+    await bot.add_cog(HelpMenu(bot))
