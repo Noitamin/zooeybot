@@ -70,12 +70,12 @@ class db:
         self.execute(query, id_list)
 
         # DEBUG
-        print("user ids in server:")
-        self.cursor.execute("SELECT userid FROM users")
-        user1 = self.cursor.fetchone()
-        while user1:
-            print(user1[0])
-            user1 = self.cursor.fetchone()
+        #print("user ids in server:")
+        #self.cursor.execute("SELECT userid FROM users")
+        #user1 = self.cursor.fetchone()
+        #while user1:
+        #    print(user1[0])
+        #    user1 = self.cursor.fetchone()
 
         self.commit()
 

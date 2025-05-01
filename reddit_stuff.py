@@ -121,6 +121,7 @@ class RedditStuff(commands.Cog):
         r = requests.post(base_url + 'api/v1/access_token',
                           data=data, headers={'user-agent': 'zooeybot by decrypto'},
                           auth=self.reddit_auth)
+        print(f"status_code: {r.status_code}")
         if r.status_code != 200:
             await ctx.send("Error: Status " + str(r.status_code))
             return
@@ -158,6 +159,8 @@ class RedditStuff(commands.Cog):
                     if type(response.json()) is dict:
                         need_request = False
                 override = None
+
+            print(response.json())
 
             if 'error' in response.json():
                 await ctx.send("cannot access sub, " + response.json()['reason'])

@@ -26,7 +26,7 @@ assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
 #startup_extensions = ["helpmenu"]
-startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four", "voice_player"]
+startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four", "voice_player", "chatbot", "pixiv"]
 message_id_cache = {}
 
 description = '''Zooey bot for discord shenanigans'''
@@ -91,6 +91,10 @@ async def on_message(message):
     elif 'same' in message.content:
         if random.randint(0, 3) == 2:
             await message.channel.send("same")
+            await bot.process_commands(message)
+    elif message.content == "wow":
+        if random.randint(0, 4) == 1:
+            await message.channel.send("wowie zowie!")
             await bot.process_commands(message)
     else:
         await bot.process_commands(message)
