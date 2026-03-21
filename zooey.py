@@ -1,7 +1,7 @@
 import discord.ext
 from discord.ext import commands
 import re
-from secrets import TOKEN
+from config import TOKEN
 from PIL import Image
 from PIL import ImageSequence
 import requests
@@ -19,18 +19,20 @@ import zipfile
 import inspect
 import asyncio
 
+print(discord.__version__)
+
 def lineno():
     return inspect.currentframe().f_back.f_lineno
 
 assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
-#startup_extensions = ["helpmenu"]
-startup_extensions = ["helpmenu", "sparkcalc", "hololive", "line", "reddit_stuff", "connect_four", "voice_player", "chatbot", "pixiv"]
+startup_extensions = ["helpmenu", "line", "connect_four", "voice_player", "chatbot"]
 message_id_cache = {}
 
 description = '''Zooey bot for discord shenanigans'''
 intents = discord.Intents.all()
+intents.message_content = True
 bot = commands.Bot(command_prefix='&', description=description, intents=intents)
 bot.remove_command('help')
 
@@ -50,113 +52,119 @@ async def on_ready():
     await bot.change_presence(status=None, activity=game)
 
 @bot.event
-async def on_message(message):
-    if message.author.bot:
-        # store own most recent messages, done here to avoid replicating for every ctx.send()
-        if message.author.id == bot.user.id:
-            # one message cache per channel, make sure it exists
-            if message.channel not in message_id_cache:
-                message_id_cache[message.channel] = []
-            # store the message id only
-            message_id_cache[message.channel].insert(0, message.id)
-            # limit the number of messages in cache
-            if (len(message_id_cache[message.channel]) > 10):
-                message_id_cache[message.channel].pop()
-        return
-    scream_pattern = re.compile("^[aA]{4,}$")
-    waaai_pattern = re.compile('(\\\o\\\)|(/o/)')
-    rand_chance = numpy.random.choice(['no', 'birb', 'scream', ''], 1, p=[0.10, 0.15, 0.35, 0.40])
+async def on_command_error(ctx, error):
+    print(f"Command fucked up: {error}")
+    await ctx.send(f"shit broke: {error}")
 
-    if (waaai_pattern.match(message.content)):
-        if re.match('(\\\o\\\)', message.content):
+@bot.event
+async def on_message(message):
+    print("Message got")
+
+    if message.author.id == bot.user.id:
+        if message.channel not in message_id_cache:
+            message_id_cache[message.channel] = []
+        message_id_cache[message.channel].insert(0, message.id)
+        if len(message_id_cache[message.channel]) > 10:
+            message_id_cache[message.channel].pop()
+
+    if message.author.bot:
+        await bot.process_commands(message)
+        return
+
+    print("going down the list...")
+
+    scream_pattern = re.compile(r"^[aA]{4,}$")
+    waaai_pattern = re.compile(r'(\\o\\)|(/o/)')
+    rand_chance = random.choices(['no', 'birb', 'scream', ''], weights=[0.10, 0.15, 0.35, 0.40], k=1)[0]
+
+    print("processing triggers")
+
+    if waaai_pattern.search(message.content):
+        if r'\o\\' in message.content:
             await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/waaai_left.jpg")))
         else:
             await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/waaai.jpg")))
-        await bot.process_commands(message)
 
-    elif (scream_pattern.match(message.content)) and rand_chance != '':
+    elif scream_pattern.match(message.content) and rand_chance != '':
         if rand_chance == 'no':
-            if message.author.id != bot.user.id: 
-                await message.channel.send("no.")
-                await bot.process_commands(message)
-
+            await message.channel.send("no.")
         elif rand_chance == 'birb':
             await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/birb_scream.jpg")))
-            await bot.process_commands(message)
-
         elif rand_chance == 'scream':
-            scream_msg = ''.join(random.choice("aA") for __ in range(1, random.randint(4, 25)))
-            await message.channel.send(scream_msg) 
-            await bot.process_commands(message)
-    elif 'same' in message.content:
+            scream_msg = ''.join(random.choice("aA") for _ in range(random.randint(4, 25)))
+            await message.channel.send(scream_msg)
+
+    elif 'same' in message.content.lower():
         if random.randint(0, 3) == 2:
             await message.channel.send("same")
-            await bot.process_commands(message)
-    elif message.content == "wow":
+
+    elif message.content.lower() == "wow":
         if random.randint(0, 4) == 1:
             await message.channel.send("wowie zowie!")
-            await bot.process_commands(message)
-    else:
-        await bot.process_commands(message)
-        return
-    
-@bot.command(pass_context=True)
+
+    print("about to process commands")
+    await bot.process_commands(message)
+    print("commands processed")
+
+
+# --- Commands ---
+# pass_context=True is removed everywhere; ctx is automatically injected in 2.x.
+# ctx.message.server  →  ctx.guild
+# ctx.message.author  →  ctx.author
+# ctx.message.channel →  ctx.channel
+
+@bot.command()
 async def bonk(ctx):
-    # delete the most recent message cached
     this_channel = ctx.channel
-    if ((this_channel not in message_id_cache) or (len(message_id_cache[this_channel]) < 1)):
+    if (this_channel not in message_id_cache) or (len(message_id_cache[this_channel]) < 1):
         await ctx.send("Nothing to bonk in this channel.")
         return
     message_id = message_id_cache[this_channel].pop(0)
     message_to_delete = await this_channel.fetch_message(message_id)
     await message_to_delete.delete()
 
-@bot.command(pass_context=True)
+@bot.command()
 async def rave(ctx):
     await ctx.send(file=discord.File(os.path.join(assets_path, "assets/sirin_smaller.gif")))
 
-@bot.command(pass_context=True)
+@bot.command()
 async def big(ctx, message):
     """Hugify a given emoji"""
-    img_pattern = re.compile("\<\:.+\:\d+\>")
-    gif_pattern = re.compile("\<a\:.+\:\d+\>")
+    img_pattern = re.compile(r"\<\:.+\:\d+\>")
+    gif_pattern = re.compile(r"\<a\:.+\:\d+\>")
 
-    mention_msg = "<@!{}>".format(ctx.message.author.id)
-    author_id = ctx.message.author.id
-    #channel = ctx.message.channel
+    mention_msg = "<@!{}>".format(ctx.author.id)   # ctx.message.author → ctx.author
+    author_id = ctx.author.id
 
-    if (img_pattern.match(message)):
+    if img_pattern.match(message):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png" 
+        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
 
         response = requests.get(emoji_url)
         img = Image.open(BytesIO(response.content)).convert("RGBA")
-        img_name = str(author_id)+ "_temp.png"
-        img.save(img_name) 
+        img_name = str(author_id) + "_temp.png"
+        img.save(img_name)
 
         await ctx.send(mention_msg)
         await ctx.send(file=discord.File(img_name))
         os.remove(img_name)
 
-    elif (gif_pattern.match(message)):
+    elif gif_pattern.match(message):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif" 
+        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif"
         gif_name = str(author_id) + "_temp.gif"
 
-        #save each frame of the gif then reconstruct it in a list
         response = requests.get(emoji_url)
         frames = []
-        nframes = 0 
         img = Image.open(BytesIO(response.content))
         bg = []
-        transparent_color = 0
         pal = img.getpalette()
         dur = img.info['duration']
         disposal = []
         if not img.getpalette():
             img.putpalette(pal)
 
-        #resize each frame and apply original palatte and save to frame list
+        transparent_color = 0
         if 'transparency' in img.info:
             transparent_color = img.info['transparency']
 
@@ -164,16 +172,15 @@ async def big(ctx, message):
             bg.append(frame.info['background'])
             disposal.append(frame.disposal_method)
             frame_pal = frame.getpalette()
-            shiftme = len(frame_pal)//3 - frame.info['transparency']       
-            frame = (numpy.array(frame) + shiftme) % (len(frame_pal)//3)  # shift data pointing into palette
+            shiftme = len(frame_pal) // 3 - frame.info['transparency']
+            frame = (numpy.array(frame) + shiftme) % (len(frame_pal) // 3)
             frame = Image.fromarray(frame).convert('P')
-            frame.putpalette(pal[-3*shiftme:] + pal[:-3*shiftme])  # shift palette
+            frame.putpalette(pal[-3 * shiftme:] + pal[:-3 * shiftme])
             b = BytesIO()
             frame.save(b, format='GIF')
             frame = Image.open(b)
             frames.append(frame)
 
-        #basically stolen from 'intense' command's method to save frames into gif   
         frames[0].save(fp=gif_name, format='gif', save_all=True,
                        append_images=frames[1:], duration=dur, loop=0,
                        background=transparent_color,
@@ -187,22 +194,12 @@ async def big(ctx, message):
     else:
         await ctx.send("That's not a custom emoji. Try again")
 
-@bot.command(pass_context=True)
+@bot.command()
 async def intense(ctx, *args):
     """Intensify a given emoji"""
-    # options:
-    # -speed [val] -> sets duration according to speed array.
-    #   note that 20 is the fastest possible duration
-    # -duration [val] -> sets duration explicitly. not user-friendly.
-    # -power [val] -> sets amplitude of displacement as a percentage of the default.
-    # -red [val] -> tints red with alpha = val. default 123.
-    #   note: alpha 0 is fully red and 255 is transparent, so not user-friendly; would expect
-    #   higher val = more red. add array version like speeds array
-
     parsed_args = helpers.parse_options(args)
 
-    image_in = args[0] # hardcoded; can add to pattern with if item.name == "input"
-    # Default values
+    image_in = args[0]
     dur = 30
     speeds = [90, 80, 70, 60, 50, 40, 30, 20]
     intensity = 1
@@ -233,25 +230,19 @@ async def intense(ctx, *args):
             except:
                 red_alpha = 123
 
-    img_pattern = re.compile("\<\:.+\:\d+\>")
+    img_pattern = re.compile(r"\<\:.+\:\d+\>")
 
-    mention_msg = "<@!{}>".format(ctx.message.author.id)
-    channel = ctx.message.channel
+    mention_msg = "<@!{}>".format(ctx.author.id)    # ctx.message.author → ctx.author
 
-    if (img_pattern.match(image_in)):
-        # print('matched img_pattern')
+    if img_pattern.match(image_in):
         emoji_id = re.sub(r'\<\:\D+|\>', '', image_in)
         image_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
         image_present = True
-    elif helpers.userInServer(ctx.message.server, image_in, 'mention'):
-        # Get user id and grab avatar from corresponding object if mentioned user in server
-        # Turn this into a helper later
-        id_digits = re.search("^<@!{0,1}(\d+)>$", image_in)
-        target_id = id_digits.group(1)
-        target_obj = ctx.message.server.get_member(target_id)
-        # Can't use target_obj.avatar_url since that's webp; instead, access the png version
-        # Check if user has an avatar
-        if target_obj.avatar == None:
+    elif helpers.userInServer(ctx.guild, image_in, 'mention'):   # ctx.message.server → ctx.guild
+        id_digits = re.search(r"^<@!{0,1}(\d+)>$", image_in)
+        target_id = int(id_digits.group(1))                      # cast to int; get_member requires int in 2.x
+        target_obj = ctx.guild.get_member(target_id)
+        if target_obj.avatar is None:
             image_present = False
         else:
             image_url = "https://cdn.discordapp.com/avatars/{0.id}/{0.avatar}.png?size=1024".format(target_obj)
@@ -259,67 +250,47 @@ async def intense(ctx, *args):
     else:
         image_present = False
 
-    if image_present == True:
-        # fetch image from url without having to save it somewhere
-        # print('waiting for response')
+    if image_present:
         response = requests.get(image_url)
         img = Image.open(BytesIO(response.content))
-        # Check for palette-based image
         if img.mode != 'RGBA':
             img = img.convert('RGBA')
 
-        # print('got response')
-
-        # image dimensions
         dims = img.size
         width = dims[1]
         height = dims[0]
 
-        # allow shifting up to 10% of the image dimensions
-        w_bound = round(width/10)
-        h_bound = round(height/10)
+        w_bound = round(width / 10)
+        h_bound = round(height / 10)
 
         crop_box = (w_bound, h_bound, width - w_bound, width - h_bound)
 
-        # hardcoded shift amounts per frame; find a good way to randomize?
         coords_w = [0, -0.7, 0.3, 0.8, 0.4, -0.9]
         coords_h = [0, 0.1, -0.5, 0.7, -0.2, 0.2]
 
         num_frames = 6
         images = []
 
-        # We have RGBA data but .gifs are a palette-based format
-        # Extract alpha channel to use as a mask
         alpha = img.split()[3]
 
-        # Apply red tint if flag provided
         if flag_red == 1:
-            red_overlay = Image.new('RGB',img.size,(255,0,0))
-            overlay_mask = Image.new('RGBA',img.size,(0,0,0,red_alpha))
-            img = Image.composite(img,red_overlay,overlay_mask)
+            red_overlay = Image.new('RGB', img.size, (255, 0, 0))
+            overlay_mask = Image.new('RGBA', img.size, (0, 0, 0, red_alpha))
+            img = Image.composite(img, red_overlay, overlay_mask)
 
-        # Convert base emoji to palette-based with 255 colors
         img = img.convert('P', palette=Image.ADAPTIVE, colors=255)
 
-        # Paste color 256 (index 255) over all pixels with alpha < 128
-        # Guaranteed not to be used because we only used 255 colors
         a_cutoff = 128
         transparent_color = 255
         mask = Image.eval(alpha, lambda a: 255 if a <= a_cutoff else 0)
         img.paste(transparent_color, mask)
 
-        # generate frames
-        for i in range(0, num_frames):
-            coords = (round(w_bound*coords_w[i]), round(h_bound*coords_h[i]))
-            box = (crop_box[0]+coords[0]*intensity, crop_box[1]+coords[1]*intensity,
-                   crop_box[2]+coords[0]*intensity, crop_box[3]+coords[1]*intensity)
+        for i in range(num_frames):
+            coords = (round(w_bound * coords_w[i]), round(h_bound * coords_h[i]))
+            box = (crop_box[0] + coords[0] * intensity, crop_box[1] + coords[1] * intensity,
+                   crop_box[2] + coords[0] * intensity, crop_box[3] + coords[1] * intensity)
             images.append(img.crop(box))
 
-        # save_all=True required for animation
-        # loop=0 loops gif forever
-        # set background color and transparency color to 255
-        # Optimize=False prevents PIL from removing color 255
-        # disposal=2 stops ghosting issue
         images[0].save(fp='temp.gif', format='gif', save_all=True,
                        append_images=images[1:], duration=dur, loop=0,
                        background=transparent_color,
@@ -333,92 +304,69 @@ async def intense(ctx, *args):
     else:
         await ctx.send("That's not a custom emoji or user with an avatar. Try again")
 
-@bot.command(pass_context=True)
+@bot.command()
 async def jail_stats(ctx, message):
     """View mentioned user's jail history"""
+    db_obj = processDB.db('{}.db'.format(ctx.guild.id))    # ctx.message.server → ctx.guild
 
-    # Connect to db
-    db_obj = processDB.db('{}.db'.format(ctx.message.server.id))
-
-    # Check to make sure mentioned user even exists on this server
-    if helpers.userInServer(ctx.message.server, message, 'mention'):
-
-        # Get user id and generate mention for later
-        id_digits = re.search("^<@!{0,1}(\d+)>$", message)
+    if helpers.userInServer(ctx.guild, message, 'mention'):
+        id_digits = re.search(r"^<@!{0,1}(\d+)>$", message)
         userid = int(id_digits.group(1))
         mention_msg = "<@!{}>".format(userid)
 
-        # Zooey is never in jail
         if userid == int(bot.user.id):
             await ctx.send("Why would anyone want to put {} in jail?".format(mention_msg))
         else:
             jail_count = db_obj.get(userid, 'jail_count')
-            if jail_count == None:
-                db_obj.set('jail_count', 0)
+            if jail_count is None:
+                db_obj.set(userid, 'jail_count', 0)
                 jail_count = 0
-            str = "{} has been sent to jail {} times.".format(mention_msg, jail_count)
+            out = "{} has been sent to jail {} times.".format(mention_msg, jail_count)
             jail_last = db_obj.get(userid, 'jail_last')
-            if jail_last is None:
-                pass
-            else:
-                str += " {} was last sent to jail on {} UTC".format(
+            if jail_last is not None:
+                out += " {} was last sent to jail on {} UTC".format(
                     mention_msg, datetime.utcfromtimestamp(jail_last))
-            await ctx.send(str)
+            await ctx.send(out)
 
-@bot.command(pass_context=True)
+@bot.command()
 async def jail(ctx, message):
     """Send mentioned user to jail"""
-
-    author_mention_msg = "<@!{}>".format(ctx.message.author.id)
-
-    # Connect to db
-    db_obj = processDB.db('{}.db'.format(ctx.message.server.id))
+    author_mention_msg = "<@!{}>".format(ctx.author.id)    # ctx.message.author → ctx.author
+    db_obj = processDB.db('{}.db'.format(ctx.guild.id))    # ctx.message.server → ctx.guild
 
     print("This is message:", message)
-    # Check to make sure mentioned user even exists on this server
-    if helpers.userInServer(ctx.message.server, message, 'mention'):
-
-        # Get user id and generate mention for later
-        id_digits = re.search("^<@!{0,1}(\d+)>$", message)
+    if helpers.userInServer(ctx.guild, message, 'mention'):
+        id_digits = re.search(r"^<@!{0,1}(\d+)>$", message)
         userid = int(id_digits.group(1))
         mention_msg = "<@!{}>".format(userid)
 
-        # Can't put Zooey in jail
         if userid == int(bot.user.id):
             await ctx.send("{} Nice try.".format(author_mention_msg))
-
         else:
-
-            # Check last time user was in jail
             jail_last = db_obj.get(userid, 'jail_last')
 
             if jail_last is not None:
-                rand_chance = numpy.random.choice(['shotty', ''], 1, p=[0.8, 0.2])
+                rand_chance = random.choices(['shotty', ''], weights=[0.8, 0.2], k=1)[0]
                 elapsed = datetime.utcnow().timestamp() - jail_last
 
-                if elapsed > 300:  # 5 minute timeout
+                if elapsed > 300:
                     db_obj.increment(userid, 'jail_count')
                     db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
                     await ctx.send("{} sent {} to jail!".format(author_mention_msg, mention_msg))
 
                     if rand_chance == 'shotty':
-                        print("im super shotty")
                         await ctx.send(file=discord.File(os.path.join(assets_path, 'assets/jail_shotty.jpg')))
-                        #await bot.process_commands(ctx.message)
                         await ctx.send("Moshi moshi, lolice desu.")
-
                 else:
                     await ctx.send("{} That user is already in jail.".format(author_mention_msg))
-
             else:
                 db_obj.set(userid, 'jail_count', 1)
                 db_obj.set(userid, 'jail_last', datetime.utcnow().timestamp())
                 await ctx.send("{} sent {} to jail!".format(author_mention_msg, mention_msg))
-
     else:
         await ctx.send("{} User not found.".format(author_mention_msg))
 
-@bot.command(pass_context=True)
+@bot.command()
 async def reload_cogs(ctx):
     for extension in startup_extensions:
         await bot.reload_extension(extension)
@@ -427,7 +375,7 @@ async def reload_cogs(ctx):
 
 async def main():
     for extension in startup_extensions:
-        print('Loading cogs')
+        print(f'Loading {extension}')
         try:
             await bot.load_extension(extension)
         except Exception as e:
@@ -436,4 +384,4 @@ async def main():
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
-    asyncio.get_event_loop().run_until_complete(main())
+    asyncio.run(main())

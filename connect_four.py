@@ -8,7 +8,7 @@ import discord
 import numpy
 import os
 from PIL import Image, ImageDraw
-from secrets import PRIVATECHANNEL
+from config import PRIVATECHANNEL
 import helpers
 
 board_width = 342
