@@ -1,6 +1,4 @@
 import asyncio
-import sys
-import discord.ext
 from discord.ext import commands
 import discord
 import helpers
@@ -14,12 +12,11 @@ json_path = "jsons/clips.json"
 class voice_player(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        f = open(os.path.join(assets_path, json_path),)
-        self.clips = json.load(f)
-        f.close()
+        with open(os.path.join(assets_path, json_path)) as f:
+            self.clips = json.load(f)
 
     async def join_ctx(self, ctx):
-        v = ctx.message.author.voice
+        v = ctx.author.voice
         vc = None
         if v:
             await v.channel.connect()
@@ -61,7 +58,7 @@ class voice_player(commands.Cog):
             # Leave vc when done repeating
             await vc.disconnect(force=True)
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def vo(self, ctx, *args):
         parsed_args = helpers.parse_options(args)
         clip = None
@@ -72,7 +69,7 @@ class voice_player(commands.Cog):
                     clip = random.choice(self.clips[item.values[0]])
                     if item.values[0] == "nut":
                         is_nut = True
-                except:
+                except KeyError:
                     print("Invalid clip name")
                     return
         if clip is not None:

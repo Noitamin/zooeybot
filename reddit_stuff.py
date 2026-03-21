@@ -1,9 +1,6 @@
 import asyncio
-import sys
 import re
-import discord.ext
 import requests
-import time
 from discord.ext import commands
 import discord
 import helpers
@@ -79,7 +76,7 @@ class RedditStuff(commands.Cog):
         tweet_url = "https://twitter.com/{tweet_username}/status/{tweet_id}/?e".format(tweet_username=tweet_username, tweet_id=tweet_id)
         return tweet_url
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def plst(self, ctx, *args):
         parsed_args = helpers.parse_options(args)
 
@@ -91,10 +88,10 @@ class RedditStuff(commands.Cog):
             if item.name == "input":
                 query = item.values[0]
 
-        await ctx.send(self.twitter_search(query))
+        await ctx.send(await asyncio.to_thread(self.twitter_search, query))
         return
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def pls(self, ctx, *args):
         parsed_args = helpers.parse_options(args)
         override = None
@@ -114,11 +111,11 @@ class RedditStuff(commands.Cog):
                 override = "top"
 
         if subreddit.startswith('#') or subreddit.startswith('@'):
-            await ctx.send(self.twitter_search(subreddit))
+            await ctx.send(await asyncio.to_thread(self.twitter_search, subreddit))
             return
 
         # obtain token for oauth requests
-        r = requests.post(base_url + 'api/v1/access_token',
+        r = await asyncio.to_thread(requests.post, base_url + 'api/v1/access_token',
                           data=data, headers={'user-agent': 'zooeybot by decrypto'},
                           auth=self.reddit_auth)
         print(f"status_code: {r.status_code}")
@@ -131,7 +128,7 @@ class RedditStuff(commands.Cog):
         headers = {'Authorization': token, 'User-Agent': 'zooeybot by decrypto'}
 
         # search to make sure subreddit exists
-        response = requests.get(obase_url + '/api/search_reddit_names?query=' + subreddit + '&exact=true', headers=headers)
+        response = await asyncio.to_thread(requests.get, obase_url + '/api/search_reddit_names?query=' + subreddit + '&exact=true', headers=headers)
 
         if 'error' in response.json():
             await ctx.send(subreddit + " does not exist, try again")
@@ -145,18 +142,18 @@ class RedditStuff(commands.Cog):
         # maximum of 10 tries before giving up
         while True:
             if need_request is True:
-                if override == "hot" :
-                    response = requests.get(obase_url + '/r/' + subreddit + '/hot', headers=headers)
+                if override == "hot":
+                    response = await asyncio.to_thread(requests.get, obase_url + '/r/' + subreddit + '/hot', headers=headers)
                     need_request = False
                 elif override == "new":
-                    response = requests.get(obase_url + '/r/' + subreddit + '/new', headers=headers)
+                    response = await asyncio.to_thread(requests.get, obase_url + '/r/' + subreddit + '/new', headers=headers)
                     need_request = False
                 elif override == "top":
-                    response = requests.get(obase_url + '/r/' + subreddit + '/top.json?t=all', headers=headers)
+                    response = await asyncio.to_thread(requests.get, obase_url + '/r/' + subreddit + '/top.json?t=all', headers=headers)
                     need_request = False
                 else:
-                    response = requests.get(obase_url + '/r/' + subreddit + '/random', headers=headers)
-                    if type(response.json()) is dict:
+                    response = await asyncio.to_thread(requests.get, obase_url + '/r/' + subreddit + '/random', headers=headers)
+                    if isinstance(response.json(), dict):
                         need_request = False
                 override = None
 
@@ -169,7 +166,7 @@ class RedditStuff(commands.Cog):
             # deal with certain subreddits that does not play nice with random
             # they return a dictionary rather than a list
             # additionally deals with the override flags as they will return a dict
-            if type(response.json()) is dict:
+            if isinstance(response.json(), dict):
                 submission = random.choice(response.json()['data']['children'])
             else:
                 submission = response.json()[0]['data']['children'][0]
@@ -192,7 +189,7 @@ class RedditStuff(commands.Cog):
         res_url = submission['data']['url_overridden_by_dest']
         res_title = submission['data']['title']
         res_ups = submission['data']['ups']
-        user = ctx.message.author.name
+        user = ctx.author.name
         print(res_url)
 
         # format response into an embed message

@@ -1,8 +1,5 @@
 import asyncio
-import sys
 import re
-import discord.ext
-import processDB
 from discord.ext import commands
 import discord
 import numpy
@@ -70,13 +67,12 @@ def check_for_victory(board,rmove,cmove):
 class connect_four(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    gameinprogress = False
-    isChaos = False
-    max_team_size = 1
-    lastPlayer = None
-    teams = [set(), set()]
-    turn = 0
+        self.gameinprogress = False
+        self.isChaos = False
+        self.max_team_size = 1
+        self.lastPlayer = None
+        self.teams = [set(), set()]
+        self.turn = 0
 
     def generate_title(self):
         color = "Red"
@@ -105,7 +101,7 @@ class connect_four(commands.Cog):
     async def draw_board(self, ctx, message, board):
         # Create an image of the board state
         # Create the backdrop
-        channel = ctx.message.channel
+        channel = ctx.channel
         out = Image.new("RGB", (board_width, board_height), bgcolor)
         for r in range(6):
             for c in range(7):
@@ -160,11 +156,11 @@ class connect_four(commands.Cog):
         else:
             return user in self.teams[self.turn]
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def connect_four(self, ctx, *args):
         """Start a game of Connect Four"""
-        mention_msg = "<@!{}>".format(ctx.message.author.id)
-        channel = ctx.message.channel
+        mention_msg = "<@!{}>".format(ctx.author.id)
+        channel = ctx.channel
         parsed_args = helpers.parse_options(args)
 
         # Check if game is in progress
@@ -180,7 +176,7 @@ class connect_four(commands.Cog):
             if item.name == "--teams":
                 try:
                     self.max_team_size = max(1, int(item.values[0]))
-                except:
+                except (ValueError, TypeError):
                     self.max_team_size = 100
 
         # Initiate the message
@@ -202,14 +198,18 @@ class connect_four(commands.Cog):
 
         while True:
             try:
-                reaction, user = await self.bot.wait_for("reaction_add", timeout=30)
+                reaction, user = await self.bot.wait_for(
+                    "reaction_add",
+                    timeout=30,
+                    check=lambda r, u: r.message.id == bpost.id and not u.bot
+                )
 
                 # Process input
                 if str(reaction.emoji) in reactions:
                     if reactdict[str(reaction.emoji)] == 7 and self.isPlayer(user):
                         # Surrender if white flag clicked and the user is part of the game
                         if (self.isChaos is True):
-                            mention_msg = "<@!{}> surrendered. No, I don't know who wins.".format(color, user.id)
+                            mention_msg = "<@!{}> surrendered. No, I don't know who wins.".format(user.id)
                         else:
                             if (user in self.teams[0]):
                                 color = "Red"

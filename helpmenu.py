@@ -1,7 +1,4 @@
-import asyncio
-import sys
-import re
-import discord.ext
+import discord
 from discord.ext import commands
 
 '''
@@ -13,10 +10,8 @@ class HelpMenu(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def help(self, ctx):
-        """Prints the default help menu"""
-        channel = ctx.message.channel
 
         embed = discord.Embed(
             title = "Zooey, at your service!",

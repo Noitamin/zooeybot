@@ -1,10 +1,6 @@
 import asyncio
-import sys
 import re
-import discord.ext
-import processDB
 import requests
-import time
 from discord.ext import commands
 import discord
 import zipfile
@@ -23,11 +19,11 @@ class Line(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def line(self, ctx, *args):
         """Post a given LINE sticker"""
-        mention_msg = "<@!{}>".format(ctx.message.author.id)
-        channel = ctx.message.channel
+        mention_msg = "<@!{}>".format(ctx.author.id)
+        channel = ctx.channel
         parsed_args = helpers.parse_options(args)
 
         for item in parsed_args:
@@ -38,7 +34,7 @@ class Line(commands.Cog):
                         line_sticker_number = int(item.values[1])
                     else:
                         line_sticker_number = item.values[1]
-                except:
+                except (IndexError, ValueError):
                     line_page_code = -1
                     line_sticker_number = -1
 
@@ -47,9 +43,9 @@ class Line(commands.Cog):
             # If sticker ID is a string of letters, send API search request and
             # grab the first item from the JSON response for now
             if not line_page_code.isdecimal():
-                line_page_code.replace(" ", "+")
+                line_page_code = line_page_code.replace(" ", "+")
                 api_url = api_url_start + line_page_code + api_url_end
-                r = requests.get(api_url)
+                r = await asyncio.to_thread(requests.get, api_url)
                 if r.status_code != 200:
                     await ctx.send("{} LINE API call failed.".format(mention_msg))
                 else:
@@ -80,13 +76,13 @@ class Line(commands.Cog):
                 # Check if this is a real LINE sticker set
                 # Try stickerpack first
                 line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickerpack@2x.zip"
-                r = requests.get(line_zip, stream=True)
+                r = await asyncio.to_thread(requests.get, line_zip, stream=True)
 
                 if r.ok:
                     # Download and extract to asset folder
                     # Check for animated versions first
                     z = zipfile.ZipFile(BytesIO(r.content))
-                    img_pattern = re.compile("animation@2x/\d+@2x.png")
+                    img_pattern = re.compile(r"animation@2x/\d+@2x.png")
                     flag_found = 0
                     for zip_info in z.infolist():
                         if img_pattern.match(zip_info.filename):
@@ -102,7 +98,7 @@ class Line(commands.Cog):
                             os.remove(apng_path)
                     else:
                         # not animated; get regular images
-                        img_pattern = re.compile("\d+@2x.png")
+                        img_pattern = re.compile(r"\d+@2x.png")
                         for infile in z.namelist():
                             if img_pattern.match(infile):
                                 z.extract(infile, line_asset_path)
@@ -110,12 +106,12 @@ class Line(commands.Cog):
                 else:
                     # try stickers
                     line_zip = "http://dl.stickershop.line.naver.jp/products/0/0/1/"+line_page_code+"/iphone/stickers@2x.zip"
-                    r = requests.get(line_zip, stream=True)
+                    r = await asyncio.to_thread(requests.get, line_zip, stream=True)
 
                     if r.ok:
                         # Download and extract to asset folder
                         # Skip downloading thumbnails and metadata files
-                        img_pattern = re.compile("\d+@2x.png")
+                        img_pattern = re.compile(r"\d+@2x.png")
                         z = zipfile.ZipFile(BytesIO(r.content))
 
                         for infile in z.namelist():
@@ -137,7 +133,7 @@ class Line(commands.Cog):
                     line_sticker_path = line_asset_path+"/"+file_list[num]
                     await ctx.send(mention_msg)
                     await channel.send(file=discord.File(line_sticker_path))
-                except:
+                except (IndexError, KeyError):
                     await ctx.send("{} LINE sticker number not found.".format(mention_msg))
                 await ctx.message.delete()
 

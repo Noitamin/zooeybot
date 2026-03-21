@@ -1,7 +1,9 @@
 import asyncio
 from discord.ext import commands
-from config import OPENAI_KEY
 from chatcompletion import completion, completion_ds, completion_xai
+
+MAX_HISTORY = 24
+DISCORD_CHAR_LIMIT = 2000
 
 class ChatBot(commands.Cog):
     def __init__(self, bot):
@@ -75,22 +77,10 @@ START:
         self.bot = bot
         self.messages = []   
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def chat(self, ctx, *, message):
-        #print(ctx.message)
-        #print(message)
-        #return
-        #if message.author == self.bot.user:
-        #    print("bye world")
-        #    return
-
-        #if self.bot.user in message.mentions:
-        #user_message = message.content.replace(f"<@{self.bot.user.id}>", "").strip()
-        user_name = ctx.message.author.display_name
-        #print(user_test)
-        #print(f"{message}")
+        user_name = ctx.author.display_name
         async with ctx.channel.typing():
-            #response = await self.get_chatcompletion(user_message)
             try:
                 if message == "CLEAR":
                     self.messages = []
@@ -98,30 +88,25 @@ START:
                     return
 
                 if len(self.messages) == 0:
-                    self.messages.append({"role": "system", "content": f"{self.sys_prompt}"})
+                    self.messages.append({"role": "system", "content": self.sys_prompt})
                     self.messages.append({"role": "user", "content": f"{user_name}: {message}"})
                 else:
                     self.messages.append({"role": "user", "content": f"{user_name}: {message}"})
 
-                response = completion(self.messages)
+                response = await asyncio.to_thread(completion, self.messages)
 
-                print("response: " + response)
-                print(f"response len: {len(response)}")
-
-                if len(response) > 2000:
+                if len(response) > DISCORD_CHAR_LIMIT:
                     await ctx.send("wooops response was over 2000 characters limit tehe pero.")
                 else:
                     self.messages.append({"role": "assistant", "content": response})
                     await ctx.send(response)
-                    if len(self.messages) > 24:
+                    if len(self.messages) > MAX_HISTORY:
                         self.messages = []
                         await ctx.send("BEEP BOOP, RESETTING MEMORY...")
 
             except Exception as e:
                 print(f"Exception: {e}")
                 await ctx.send(f"Exception occurred: {e}")
-            #mention = message.author.mention
-            #reply = f'{mention}, {response}'
 
 
 async def setup(bot):

@@ -1,10 +1,6 @@
 import asyncio
-import sys
 import re
-import discord.ext
-import processDB
 import requests
-import time
 from discord.ext import commands
 import discord
 import os
@@ -19,9 +15,8 @@ json_path = "jsons/holomem.json"
 class Hololive(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        f = open(os.path.join(assets_path, json_path),)
-        self.holo_dict = json.load(f)
-        f.close()
+        with open(os.path.join(assets_path, json_path)) as f:
+            self.holo_dict = json.load(f)
 
     def _check_dict(self, live_soup):
         live_dict = {}
@@ -32,14 +27,14 @@ class Hololive(commands.Cog):
                 live_dict[chan] = "<" + t['href'] + ">"
         return live_dict
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def holo(self, ctx):
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid subcommand passed.")
 
-    @holo.command(pass_context=True)
+    @holo.command()
     async def live(self, ctx):
-        page = requests.get(url).content
+        page = (await asyncio.to_thread(requests.get, url)).content
         soup = BeautifulSoup(page, 'html.parser')
         all_live = soup.find_all('a', style=re.compile("border: 3px red"))
         live_chan = self._check_dict(all_live)

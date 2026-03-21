@@ -32,32 +32,7 @@ class db:
         except Exception as e:
             print(e)
 
-        try:
-            self.cursor.execute("ALTER TABLE users ADD COLUMN crystals INTEGER DEFAULT 0")
-            self.conn.commit()
-        except Exception as e:
-            print(e)
-
-        try:
-            self.cursor.execute("ALTER TABLE users ADD COLUMN singles INTEGER DEFAULT 0")
-            self.conn.commit()
-        except Exception as e:
-            print(e)
-
-        try:
-            self.cursor.execute("ALTER TABLE users ADD COLUMN tens INTEGER DEFAULT 0")
-            self.conn.commit()
-        except Exception as e:
-            print(e)
-
-        try:
-            self.cursor.execute("ALTER TABLE users ADD COLUMN total_spark INTEGER DEFAULT 0")
-            self.conn.commit()
-        except Exception as e:
-            print(e)
-
         # Check if all users are in table
-
         id_list = [member.id for member in server.members]
 
         for id in id_list:
@@ -68,15 +43,6 @@ class db:
         placeholders = ', '.join('?' for id in id_list)
         query = "DELETE FROM users WHERE userid NOT IN ({})".format(placeholders)
         self.execute(query, id_list)
-
-        # DEBUG
-        #print("user ids in server:")
-        #self.cursor.execute("SELECT userid FROM users")
-        #user1 = self.cursor.fetchone()
-        #while user1:
-        #    print(user1[0])
-        #    user1 = self.cursor.fetchone()
-
         self.commit()
 
     def execute(self, query, *args):
@@ -89,7 +55,7 @@ class db:
     def executeIfAble(self, query, *args):
         try:
             self.cursor.execute(query, *args)
-        except:
+        except Exception:
             pass
 
     def commit(self):

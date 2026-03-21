@@ -10,24 +10,22 @@ import imageio
 import os
 import numpy
 import helpers
-import sqlite3
 import processDB
 from datetime import datetime
 import random
-import string
-import zipfile
-import inspect
 import asyncio
 
-print(discord.__version__)
+IMG_EMOJI_RE = re.compile(r"\<\:.+\:\d+\>")
+GIF_EMOJI_RE = re.compile(r"\<a\:.+\:\d+\>")
+SCREAM_RE = re.compile(r"^[aA]{4,}$")
+WAAAI_RE = re.compile(r'(\\o\\)|(/o/)')
 
-def lineno():
-    return inspect.currentframe().f_back.f_lineno
+print(discord.__version__)
 
 assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
-startup_extensions = ["helpmenu", "line", "connect_four", "voice_player", "chatbot"]
+startup_extensions = ["helpmenu", "line", "connect_four", "voice_player", "chatbot", "gif"]
 message_id_cache = {}
 
 description = '''Zooey bot for discord shenanigans'''
@@ -73,19 +71,17 @@ async def on_message(message):
 
     print("going down the list...")
 
-    scream_pattern = re.compile(r"^[aA]{4,}$")
-    waaai_pattern = re.compile(r'(\\o\\)|(/o/)')
     rand_chance = random.choices(['no', 'birb', 'scream', ''], weights=[0.10, 0.15, 0.35, 0.40], k=1)[0]
 
     print("processing triggers")
 
-    if waaai_pattern.search(message.content):
+    if WAAAI_RE.search(message.content):
         if r'\o\\' in message.content:
             await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/waaai_left.jpg")))
         else:
             await message.channel.send(file=discord.File(os.path.join(assets_path, "assets/waaai.jpg")))
 
-    elif scream_pattern.match(message.content) and rand_chance != '':
+    elif SCREAM_RE.match(message.content) and rand_chance != '':
         if rand_chance == 'no':
             await message.channel.send("no.")
         elif rand_chance == 'birb':
@@ -130,31 +126,29 @@ async def rave(ctx):
 @bot.command()
 async def big(ctx, message):
     """Hugify a given emoji"""
-    img_pattern = re.compile(r"\<\:.+\:\d+\>")
-    gif_pattern = re.compile(r"\<a\:.+\:\d+\>")
-
-    mention_msg = "<@!{}>".format(ctx.author.id)   # ctx.message.author → ctx.author
+    mention_msg = "<@!{}>".format(ctx.author.id)
     author_id = ctx.author.id
 
-    if img_pattern.match(message):
+    if IMG_EMOJI_RE.match(message):
         emoji_id = re.sub(r'\<\:\D+|\>', '', message)
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
 
-        response = requests.get(emoji_url)
+        response = requests.get(emoji_url, timeout=10)
         img = Image.open(BytesIO(response.content)).convert("RGBA")
         img_name = str(author_id) + "_temp.png"
         img.save(img_name)
+        try:
+            await ctx.send(mention_msg)
+            await ctx.send(file=discord.File(img_name))
+        finally:
+            os.remove(img_name)
 
-        await ctx.send(mention_msg)
-        await ctx.send(file=discord.File(img_name))
-        os.remove(img_name)
-
-    elif gif_pattern.match(message):
+    elif GIF_EMOJI_RE.match(message):
         emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
         emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif"
         gif_name = str(author_id) + "_temp.gif"
 
-        response = requests.get(emoji_url)
+        response = requests.get(emoji_url, timeout=10)
         frames = []
         img = Image.open(BytesIO(response.content))
         bg = []
@@ -186,10 +180,11 @@ async def big(ctx, message):
                        background=transparent_color,
                        transparency=0,
                        optimize=False, disposal=disposal)
-
-        await ctx.send(mention_msg)
-        await ctx.send(file=discord.File(gif_name))
-        os.remove(gif_name)
+        try:
+            await ctx.send(mention_msg)
+            await ctx.send(file=discord.File(gif_name))
+        finally:
+            os.remove(gif_name)
 
     else:
         await ctx.send("That's not a custom emoji. Try again")
@@ -230,11 +225,9 @@ async def intense(ctx, *args):
             except:
                 red_alpha = 123
 
-    img_pattern = re.compile(r"\<\:.+\:\d+\>")
+    mention_msg = "<@!{}>".format(ctx.author.id)
 
-    mention_msg = "<@!{}>".format(ctx.author.id)    # ctx.message.author → ctx.author
-
-    if img_pattern.match(image_in):
+    if IMG_EMOJI_RE.match(image_in):
         emoji_id = re.sub(r'\<\:\D+|\>', '', image_in)
         image_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
         image_present = True
@@ -251,7 +244,7 @@ async def intense(ctx, *args):
         image_present = False
 
     if image_present:
-        response = requests.get(image_url)
+        response = requests.get(image_url, timeout=10)
         img = Image.open(BytesIO(response.content))
         if img.mode != 'RGBA':
             img = img.convert('RGBA')
@@ -291,15 +284,17 @@ async def intense(ctx, *args):
                    crop_box[2] + coords[0] * intensity, crop_box[3] + coords[1] * intensity)
             images.append(img.crop(box))
 
-        images[0].save(fp='temp.gif', format='gif', save_all=True,
+        tmp_path = str(ctx.author.id) + "_intense.gif"
+        images[0].save(fp=tmp_path, format='gif', save_all=True,
                        append_images=images[1:], duration=dur, loop=0,
                        background=transparent_color,
                        transparency=transparent_color,
                        optimize=False, disposal=2)
-
-        await ctx.send(mention_msg)
-        await ctx.send(file=discord.File('temp.gif'))
-        os.remove('temp.gif')
+        try:
+            await ctx.send(mention_msg)
+            await ctx.send(file=discord.File(tmp_path))
+        finally:
+            os.remove(tmp_path)
 
     else:
         await ctx.send("That's not a custom emoji or user with an avatar. Try again")
