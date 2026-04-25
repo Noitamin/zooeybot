@@ -49,7 +49,7 @@ Jinja2==2.11.3
 jiter==0.9.0
 lazy-object-proxy==0.0.0
 logilab-common==1.8.1
-lxml==4.6.3
+lxml==6.1.0
 MarkupSafe==1.1.1
 mccabe==0.6.1
 microdotphat==0.2.1
