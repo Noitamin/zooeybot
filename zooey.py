@@ -3,14 +3,12 @@ from discord.ext import commands
 import re
 from config import TOKEN
 from PIL import Image
-from PIL import ImageSequence
 import requests
 from io import BytesIO
 import imageio
 import os
-import numpy
-import helpers
-import processDB
+from utils import helpers
+from utils import processDB
 from datetime import datetime
 import random
 import asyncio
@@ -25,7 +23,7 @@ print(discord.__version__)
 assets_path = os.path.dirname(os.path.abspath(__file__))
 print(assets_path)
 
-startup_extensions = ["helpmenu", "line", "connect_four", "voice_player", "chatbot", "gif"]
+startup_extensions = ["cogs.helpmenu", "cogs.line", "cogs.connect_four", "cogs.voice_player", "cogs.chatbot", "cogs.gif"]
 message_id_cache = {}
 
 description = '''Zooey bot for discord shenanigans'''
@@ -126,68 +124,20 @@ async def rave(ctx):
 @bot.command()
 async def big(ctx, message):
     """Hugify a given emoji"""
-    mention_msg = "<@!{}>".format(ctx.author.id)
-    author_id = ctx.author.id
-
     if IMG_EMOJI_RE.match(message):
-        emoji_id = re.sub(r'\<\:\D+|\>', '', message)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".png"
-
-        response = requests.get(emoji_url, timeout=10)
-        img = Image.open(BytesIO(response.content)).convert("RGBA")
-        img_name = str(author_id) + "_temp.png"
-        img.save(img_name)
-        try:
-            await ctx.send(mention_msg)
-            await ctx.send(file=discord.File(img_name))
-        finally:
-            os.remove(img_name)
-
+        ext = "png"
     elif GIF_EMOJI_RE.match(message):
-        emoji_id = re.sub(r'\<a\:\D+|\>', '', message)
-        emoji_url = "https://cdn.discordapp.com/emojis/" + emoji_id + ".gif"
-        gif_name = str(author_id) + "_temp.gif"
-
-        response = requests.get(emoji_url, timeout=10)
-        frames = []
-        img = Image.open(BytesIO(response.content))
-        bg = []
-        pal = img.getpalette()
-        dur = img.info['duration']
-        disposal = []
-        if not img.getpalette():
-            img.putpalette(pal)
-
-        transparent_color = 0
-        if 'transparency' in img.info:
-            transparent_color = img.info['transparency']
-
-        for frame in ImageSequence.Iterator(img):
-            bg.append(frame.info['background'])
-            disposal.append(frame.disposal_method)
-            frame_pal = frame.getpalette()
-            shiftme = len(frame_pal) // 3 - frame.info['transparency']
-            frame = (numpy.array(frame) + shiftme) % (len(frame_pal) // 3)
-            frame = Image.fromarray(frame).convert('P')
-            frame.putpalette(pal[-3 * shiftme:] + pal[:-3 * shiftme])
-            b = BytesIO()
-            frame.save(b, format='GIF')
-            frame = Image.open(b)
-            frames.append(frame)
-
-        frames[0].save(fp=gif_name, format='gif', save_all=True,
-                       append_images=frames[1:], duration=dur, loop=0,
-                       background=transparent_color,
-                       transparency=0,
-                       optimize=False, disposal=disposal)
-        try:
-            await ctx.send(mention_msg)
-            await ctx.send(file=discord.File(gif_name))
-        finally:
-            os.remove(gif_name)
-
+        ext = "gif"
     else:
         await ctx.send("That's not a custom emoji. Try again")
+        return
+
+    emoji_id = re.sub(r'<a?:\D+|>', '', message)
+    emoji_url = f"https://cdn.discordapp.com/emojis/{emoji_id}.{ext}"
+
+    response = await asyncio.to_thread(requests.get, emoji_url, timeout=10)
+    await ctx.send(f"<@!{ctx.author.id}>")
+    await ctx.send(file=discord.File(BytesIO(response.content), filename=f"emoji.{ext}"))
 
 @bot.command()
 async def intense(ctx, *args):

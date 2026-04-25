@@ -4,7 +4,7 @@ import requests
 from discord.ext import commands
 import discord
 import zipfile
-import helpers
+from utils import helpers
 import os
 import json
 from shutil import rmtree

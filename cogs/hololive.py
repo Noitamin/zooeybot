@@ -9,7 +9,7 @@ import json
 from bs4 import BeautifulSoup
 
 url = 'https://schedule.hololive.tv/lives'
-assets_path = os.path.dirname(os.path.abspath(__file__))
+assets_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 json_path = "jsons/holomem.json"
 
 class Hololive(commands.Cog):

@@ -6,7 +6,7 @@ import numpy
 import os
 from PIL import Image, ImageDraw
 from config import PRIVATECHANNEL
-import helpers
+from utils import helpers
 
 board_width = 342
 board_height = 294

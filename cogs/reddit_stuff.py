@@ -3,7 +3,7 @@ import re
 import requests
 from discord.ext import commands
 import discord
-import helpers
+from utils import helpers
 import random
 from random import choice
 from tweepy import Client, OAuth1UserHandler

@@ -3,3 +3,4 @@ __pycache__
 .gitignore
 *.db
 assets/line
+config.py

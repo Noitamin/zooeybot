@@ -1,12 +1,12 @@
 import asyncio
 from discord.ext import commands
 import discord
-import helpers
+from utils import helpers
 import os
 import json
 import random
 
-assets_path = os.path.dirname(os.path.abspath(__file__))
+assets_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 json_path = "jsons/clips.json"
 
 class voice_player(commands.Cog):

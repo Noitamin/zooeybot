@@ -16,11 +16,12 @@ def completion_xai(message):
 
 def completion_ds(message):
     response = ds_client.chat.completions.create(
-        model="deepseek-chat",
+        model="deepseek-v4-flash",
         messages=message,
-        max_tokens=400,
-        temperature=1.5,
-        stream=False
+        max_tokens=1000,
+        temperature=1.0,
+        stream=False,
+        extra_body={"thinking": {"type": "disabled"}}
     )
     return response.choices[0].message.content
 
