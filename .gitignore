@@ -4,3 +4,7 @@ __pycache__
 *.db
 assets/line
 config.py
+.env
+.env.*
+!.env.example
+.venv/

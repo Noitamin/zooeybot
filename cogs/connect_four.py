@@ -5,7 +5,7 @@ import discord
 import numpy
 import os
 from PIL import Image, ImageDraw
-from config import PRIVATECHANNEL
+from utils.settings import PRIVATECHANNEL
 from utils import helpers
 
 board_width = 342
@@ -259,4 +259,3 @@ class connect_four(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(connect_four(bot))
-

@@ -1,7 +1,7 @@
 import discord.ext
 from discord.ext import commands
 import re
-from config import TOKEN
+from utils.settings import TOKEN
 from PIL import Image
 import requests
 from io import BytesIO

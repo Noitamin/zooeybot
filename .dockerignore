@@ -1,0 +1,15 @@
+*
+!Dockerfile
+!requirements.txt
+!zooey.py
+!cogs/
+!cogs/**
+!utils/
+!utils/**
+!assets/
+!assets/**
+!jsons/
+!jsons/**
+**/__pycache__/
+**/*.pyc
+assets/line/

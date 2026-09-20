@@ -23,6 +23,14 @@ class HelpMenu(commands.Cog):
                         value="`Hugifies a custom emoji.`",
                         inline=False)
 
+        embed.add_field(name="&search QUESTION",
+                        value="Ask Zooey to look something up on the web.",
+                        inline=False)
+
+        embed.add_field(name="&chat MESSAGE",
+                        value="Chat with Zooey, who can search the web when needed. Use &chat CLEAR to reset memory.",
+                        inline=False)
+
         embed.add_field(name="&intense",
                         value="`Intensifies a custom emoji or avatar of mentioned user.`",
                         inline=False)

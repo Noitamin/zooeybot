@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import discord
 from discord.ext import commands
-from config import KLIPY_API_KEY
+from utils.settings import KLIPY_API_KEY
 
 KLIPY_URL = f"https://api.klipy.com/api/v1/{KLIPY_API_KEY}/gifs/search"
 PER_PAGE = 16
