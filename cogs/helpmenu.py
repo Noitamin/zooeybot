@@ -27,8 +27,12 @@ class HelpMenu(commands.Cog):
                         value="Ask Zooey to look something up on the web.",
                         inline=False)
 
+        embed.add_field(name="@Zooey summarize the last 50 messages",
+                        value="Summarize this channel in character. Defaults to 40 messages; supports 1–200. Also works with &chat or a reply.",
+                        inline=False)
+
         embed.add_field(name="&chat MESSAGE",
-                        value="Chat with Zooey, who can search the web when needed. Use &chat CLEAR to reset memory.",
+                        value="Chat with Zooey, or mention/reply to her. She can search when needed. Use &chat CLEAR to reset memory.",
                         inline=False)
 
         embed.add_field(name="&intense",

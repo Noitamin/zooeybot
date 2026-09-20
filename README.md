@@ -1,6 +1,35 @@
 # zooeybot v1.0
 Bot for discord shenanigans 
 
+## Mention and reply conversations
+
+Mention Zooey or reply to one of her messages to chat without `&chat`.
+She receives up to ten preceding messages from the same channel or thread,
+plus the message you replied to if it is older. Background is capped at
+10,000 characters, with up to 1,000 characters per message. Attachment
+contents are not read. Other bots do not trigger replies.
+
+This background is temporary: only your request and Zooey's answer join
+the existing per-server memory (per-user in DMs). Ordinary messages do not
+trigger chat. Commands continue working normally. Enable **Read Message
+History** for channel context; if history is unavailable, mentions still work.
+Reply detection also requires access to the referenced message.
+
+## Conversation summaries
+
+Ask `@Zooey summarize the last 50 messages`, reply to her with `summarize
+the conversation`, or use `&chat summarize the last 20 messages`.
+Zooey fetches the requested messages from the current channel or thread and
+summarizes them in character. The default is 40; supported counts are 1–200.
+The request itself is excluded, and messages from other users and bots count
+toward the total. Read Message History permission is required.
+
+Large messages are shortened to keep the combined message text around
+40,000 characters. Zooey is told when text was shortened or fewer messages
+were available. Attachment contents are not read. Retrieved history is
+temporary; only the request and final summary enter conversational memory.
+This feature works without a Tavily key and uses the existing DeepSeek API.
+
 ## Web search
 
 Create a [Tavily API key](https://app.tavily.com/) and add

@@ -94,6 +94,35 @@ class ToolTests(unittest.TestCase):
                 self.assertEqual(completion.completion_ds(self.history), 'Unable to verify')
                 self.assertIn('error', create.call_args.kwargs['messages'][-1]['content'])
 
+    def test_summary_tool_default_and_explicit_count_without_tavily(self):
+        for arguments, expected in (('{}', 40), ('{"count":50}', 50)):
+            summary_call = call(1, arguments)
+            summary_call['function']['name'] = 'summarize_messages'
+            reader = Mock(return_value={'messages': [{'author': 'Alice', 'text': 'Plan agreed'}]})
+            with patch.object(completion, 'TAVILY_API_KEY', ''), patch.object(completion.ds_client.chat.completions, 'create', side_effect=[reply(calls=[summary_call]), reply('The mortals have agreed on a plan.')]) as create:
+                answer = completion.completion_ds(self.history, summary_reader=reader)
+            reader.assert_called_once_with(expected)
+            self.assertEqual(answer, 'The mortals have agreed on a plan.')
+            self.assertEqual(create.call_args.kwargs['tools'][0]['function']['name'], 'summarize_messages')
+            self.assertEqual(create.call_args.kwargs['tool_choice'], 'none')
+            self.assertEqual(len(self.history), 2)
+
+    def test_summary_count_validation_and_single_call_budget(self):
+        for value in ('0', '201', 'true', '"20"', '1.5'):
+            summary_call = call(1, '{"count":' + value + '}')
+            summary_call['function']['name'] = 'summarize_messages'
+            with patch.object(completion.ds_client.chat.completions, 'create', side_effect=[reply(calls=[summary_call]), reply('Unsupported count')]):
+                reader = Mock()
+                completion.completion_ds(self.history, summary_reader=reader)
+                reader.assert_not_called()
+        summary_call = call(1, '{}')
+        summary_call['function']['name'] = 'summarize_messages'
+        another_call = {**summary_call, 'id': 'call_2'}
+        with patch.object(completion.ds_client.chat.completions, 'create', side_effect=[reply(calls=[summary_call, another_call]), reply('Summary')]):
+            reader = Mock(return_value={'messages': []})
+            completion.completion_ds(self.history, summary_reader=reader)
+            reader.assert_called_once_with(40)
+
 
 if __name__ == '__main__':
     unittest.main()

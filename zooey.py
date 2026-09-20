@@ -64,7 +64,10 @@ async def on_message(message):
             message_id_cache[message.channel].pop()
 
     if message.author.bot:
-        await bot.process_commands(message)
+        return
+
+    chatbot = bot.get_cog('ChatBot')
+    if chatbot is not None and await chatbot.handle_conversation(message):
         return
 
     print("going down the list...")
