@@ -78,6 +78,10 @@ including FFmpeg for voice playback. It runs as an unprivileged user and
 requires no published ports. Compose injects `.env` as environment variables.
 The file is excluded from Git and the Docker image.
 
+Docker rotates the bot's logs at 10 MB and keeps at most three files
+(approximately 30 MB total). Apply logging configuration changes with
+`docker compose up -d --force-recreate bot`.
+
 Databases and downloaded LINE stickers persist in the `bot-data` volume.
 To migrate existing databases, stop the old bot and copy them before starting:
 
