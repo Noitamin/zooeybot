@@ -9,6 +9,6 @@ apng==0.3.4
 imageio==2.22.4
 numpy==1.26.4
 openai==1.76.2
-Pillow==12.3.0
+Pillow==13.0.0
 requests==2.33.1
 python-dotenv==1.2.3
